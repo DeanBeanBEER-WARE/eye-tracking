@@ -1,5 +1,8 @@
 /// A command of the status menu.
 public enum MenuCommand: Equatable, Sendable {
+    /// Switches gaze control of the pointer on or off.
+    case toggleGazeControl
+
     /// Starts the calibration.
     case calibrate
 
@@ -29,6 +32,9 @@ public enum MenuCommand: Equatable, Sendable {
 public enum MenuLabel: Equatable, Sendable {
     /// The app name with the installed version.
     case version(String)
+
+    /// "Gaze control".
+    case gazeControl
 
     /// "Calibrate…".
     case calibrate
@@ -157,6 +163,9 @@ public struct MenuState: Equatable, Sendable {
     /// Whether the live gaze dot is shown.
     public var isGazeDotVisible: Bool
 
+    /// Whether gaze control of the pointer is on.
+    public var isGazeControlOn: Bool
+
     /// Creates a state.
     ///
     /// - Parameters:
@@ -168,6 +177,7 @@ public struct MenuState: Equatable, Sendable {
     ///   - hasCalibration: Whether a calibration for the current displays exists.
     ///   - isCalibrating: Whether a calibration runs.
     ///   - isGazeDotVisible: Whether the live gaze dot is shown.
+    ///   - isGazeControlOn: Whether gaze control of the pointer is on.
     public init(
         version: String,
         availableUpdate: String? = nil,
@@ -176,7 +186,8 @@ public struct MenuState: Equatable, Sendable {
         cameras: [CameraChoice] = [],
         hasCalibration: Bool = false,
         isCalibrating: Bool = false,
-        isGazeDotVisible: Bool = false
+        isGazeDotVisible: Bool = false,
+        isGazeControlOn: Bool = false
     ) {
         self.version = version
         self.availableUpdate = availableUpdate
@@ -186,6 +197,7 @@ public struct MenuState: Equatable, Sendable {
         self.hasCalibration = hasCalibration
         self.isCalibrating = isCalibrating
         self.isGazeDotVisible = isGazeDotVisible
+        self.isGazeControlOn = isGazeControlOn
     }
 }
 
@@ -197,16 +209,23 @@ public enum MenuModel {
     /// - Returns: The nodes of the status menu.
     public static func build(state: MenuState) -> [MenuNode] {
         var nodes: [MenuNode] = [.item(MenuItem(.version(state.version))), .separator]
+        let canUseGaze = state.hasCalibration && !state.isCalibrating
+        // Gaze control can always be switched off, so a broken state never locks the user in.
+        let canToggleControl = canUseGaze || state.isGazeControlOn
+        nodes.append(
+            .item(
+                MenuItem(
+                    .gazeControl, command: canToggleControl ? .toggleGazeControl : nil, isChecked: state.isGazeControlOn
+                )))
         if state.isCalibrating {
             nodes.append(.item(MenuItem(.calibrating)))
         } else {
             nodes.append(.item(MenuItem(.calibrate, command: .calibrate)))
         }
-        let canShowGaze = state.hasCalibration && !state.isCalibrating
         nodes.append(
             .item(
                 MenuItem(
-                    .gazeDot, command: canShowGaze ? .toggleGazeDot : nil, isChecked: state.isGazeDotVisible)))
+                    .gazeDot, command: canUseGaze ? .toggleGazeDot : nil, isChecked: state.isGazeDotVisible)))
         nodes.append(.separator)
         nodes.append(.item(MenuItem(.preview, command: .togglePreview, isChecked: state.isPreviewVisible)))
         if !state.cameras.isEmpty {

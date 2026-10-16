@@ -243,6 +243,17 @@
         }
       }
     },
+    "menu.gaze_control" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blicksteuerung"
+          }
+        }
+      }
+    },
     "menu.gaze_dot" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -305,6 +316,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "pointer.no_calibration.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Blicksteuerung braucht eine Kalibrierung für die aktuelle Bildschirmanordnung. Wähle „Kalibrieren …“ im Menü."
+          }
+        }
+      }
+    },
+    "pointer.no_calibration.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte zuerst kalibrieren"
+          }
+        }
+      }
+    },
+    "pointer.permissions.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eye Tracking braucht das Recht „Bedienungshilfen“ (Systemeinstellungen > Datenschutz & Sicherheit), um den Mauszeiger zu bewegen und Klicks, Scrollen und Ziehen der externen Maus weiterzugeben. Das Trackpad bleibt immer frei.\n\nFalls macOS zusätzlich nach „Eingabeüberwachung“ fragt, bitte ebenfalls erlauben. Nach dem Erlauben startet die Blicksteuerung automatisch."
+          }
+        }
+      }
+    },
+    "pointer.permissions.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berechtigungen für die Blicksteuerung"
           }
         }
       }

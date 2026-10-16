@@ -5,13 +5,14 @@ import Testing
 
 @Suite("Core")
 struct CoreTests {
-    @Test("The menu shows version, calibration, gaze dot, preview, update check, log and quit")
+    @Test("The menu shows version, gaze control, calibration, gaze dot, preview, update check, log and quit")
     func menuDefault() {
         let nodes = MenuModel.build(state: MenuState(version: "0.1.0"))
         #expect(
             nodes == [
                 .item(MenuItem(.version("0.1.0"))),
                 .separator,
+                .item(MenuItem(.gazeControl)),
                 .item(MenuItem(.calibrate, command: .calibrate)),
                 .item(MenuItem(.gazeDot)),
                 .separator,
@@ -24,21 +25,26 @@ struct CoreTests {
             ])
     }
 
-    @Test("The gaze dot needs a calibration; a running calibration disables both entries")
+    @Test("Gaze control and the gaze dot need a calibration; a running calibration disables them")
     func menuCalibration() {
         let ready = MenuModel.build(state: MenuState(version: "0.3.0", hasCalibration: true, isGazeDotVisible: true))
-        #expect(ready[3] == .item(MenuItem(.gazeDot, command: .toggleGazeDot, isChecked: true)))
+        #expect(ready[2] == .item(MenuItem(.gazeControl, command: .toggleGazeControl)))
+        #expect(ready[4] == .item(MenuItem(.gazeDot, command: .toggleGazeDot, isChecked: true)))
         let running = MenuModel.build(state: MenuState(version: "0.3.0", hasCalibration: true, isCalibrating: true))
-        #expect(running[2] == .item(MenuItem(.calibrating)))
-        #expect(running[3] == .item(MenuItem(.gazeDot)))
+        #expect(running[2] == .item(MenuItem(.gazeControl)))
+        #expect(running[3] == .item(MenuItem(.calibrating)))
+        #expect(running[4] == .item(MenuItem(.gazeDot)))
+        // Gaze control that is on can always be switched off.
+        let on = MenuModel.build(state: MenuState(version: "0.4.0", isGazeControlOn: true))
+        #expect(on[2] == .item(MenuItem(.gazeControl, command: .toggleGazeControl, isChecked: true)))
     }
 
     @Test("A found update adds the install entry; a running check disables the check entry")
     func menuUpdate() {
         let nodes = MenuModel.build(
             state: MenuState(version: "0.1.0", availableUpdate: "0.1.1", isCheckingForUpdates: true))
-        #expect(nodes[7] == .item(MenuItem(.installUpdate("0.1.1"), command: .installUpdate)))
-        #expect(nodes[8] == .item(MenuItem(.checkingForUpdates)))
+        #expect(nodes[8] == .item(MenuItem(.installUpdate("0.1.1"), command: .installUpdate)))
+        #expect(nodes[9] == .item(MenuItem(.checkingForUpdates)))
     }
 
     @Test("Cameras form a submenu with the selected one checked; the open preview is checked")
@@ -50,15 +56,26 @@ struct CoreTests {
                 CameraChoice(id: "b", name: "iPhone", isSelected: false),
             ])
         let nodes = MenuModel.build(state: state)
-        #expect(nodes[5] == .item(MenuItem(.preview, command: .togglePreview, isChecked: true)))
+        #expect(nodes[6] == .item(MenuItem(.preview, command: .togglePreview, isChecked: true)))
         #expect(
-            nodes[6]
+            nodes[7]
                 == .submenu(
                     .camera,
                     [
                         .item(MenuItem(.cameraDevice("FaceTime"), command: .selectCamera("a"), isChecked: true)),
                         .item(MenuItem(.cameraDevice("iPhone"), command: .selectCamera("b"))),
                     ]))
+    }
+
+    @Test("Hotkey URLs map to commands and back")
+    func hotkeys() throws {
+        #expect(HotkeyCommand(url: try #require(URL(string: "eyetracking://toggle"))) == .toggle)
+        #expect(HotkeyCommand(url: try #require(URL(string: "EyeTracking://Pause-Start"))) == .pauseStart)
+        #expect(HotkeyCommand(url: try #require(URL(string: "eyetracking://unknown"))) == nil)
+        #expect(HotkeyCommand(url: try #require(URL(string: "https://toggle"))) == nil)
+        for command in HotkeyCommand.allCases {
+            #expect(HotkeyCommand(url: command.url) == command)
+        }
     }
 
     @Test("Settings round-trip and tolerate missing or broken files")

@@ -9,6 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var updater: Updater?
     private var tracking: TrackingController?
     private var menuActions: MenuActions?
+    private var pointer: PointerController?
+    private var calibration: CalibrationController?
     private var statusItemController: StatusItemController?
 
     /// Starts logging, creates the updater and the status item once the application has finished launching.
@@ -33,23 +35,60 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let gaze = GazeService(tracking: tracking)
         let gazeDot = GazeDotController(gaze: gaze)
         let calibration = CalibrationController(tracking: tracking, gaze: gaze)
-        gaze.onDisplaysChanged = { [weak gazeDot] in gazeDot?.displaysChanged() }
-        calibration.onStart = { [weak gazeDot] in gazeDot?.hide() }
+        let pointer = PointerController(gaze: gaze, settings: settings)
+        gaze.onDisplaysChanged = { [weak gazeDot, weak pointer] in
+            gazeDot?.displaysChanged()
+            pointer?.displaysChanged()
+        }
+        calibration.onStart = { [weak gazeDot, weak pointer] in
+            gazeDot?.hide()
+            pointer?.setSuspended(true)
+        }
+        calibration.onFinish = { [weak pointer] in pointer?.setSuspended(false) }
         let menuActions = MenuActions(
             updater: updater, tracking: tracking, preview: preview, gaze: gaze, calibration: calibration,
-            gazeDot: gazeDot)
+            gazeDot: gazeDot, pointer: pointer)
         let statusItemController = StatusItemController(actions: menuActions)
         self.updater = updater
         self.tracking = tracking
         self.menuActions = menuActions
+        self.pointer = pointer
+        self.calibration = calibration
         self.statusItemController = statusItemController
         updater.start()
+        pointer.restore()
     }
 
-    /// Stops the periodic update check before the app quits.
+    /// Handles the hotkey URLs that Karabiner opens with `open -g eyetracking://...`.
+    ///
+    /// - Parameters:
+    ///   - application: The application.
+    ///   - urls: The opened URLs.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            guard let command = HotkeyCommand(url: url) else {
+                log.warning("Unknown URL \(url.absoluteString).")
+                continue
+            }
+            log.info("Hotkey: \(command).")
+            switch command {
+            case .toggle:
+                pointer?.toggle()
+            case .pauseStart:
+                pointer?.setPaused(true)
+            case .pauseEnd:
+                pointer?.setPaused(false)
+            case .recalibrate:
+                calibration?.start()
+            }
+        }
+    }
+
+    /// Gives the mouse back and stops the periodic update check before the app quits.
     ///
     /// - Parameter notification: The termination notification.
     func applicationWillTerminate(_ notification: Notification) {
+        pointer?.shutDown()
         updater?.stop()
         log.info("\(AppInfo.displayName) quit.")
     }

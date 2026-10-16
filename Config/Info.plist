@@ -18,6 +18,17 @@
     <string>Eye Tracking</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.deanbean.eyetracking.hotkeys</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>eyetracking</string>
+            </array>
+        </dict>
+    </array>
     <key>CFBundleShortVersionString</key>
     <string>$(MARKETING_VERSION)</string>
     <key>CFBundleVersion</key>

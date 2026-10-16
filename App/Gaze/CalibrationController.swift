@@ -49,8 +49,11 @@ final class CalibrationController {
     /// Whether a calibration runs, including the model fit.
     private(set) var isRunning = false
 
-    /// Called before a calibration starts, to hide other overlays.
+    /// Called before a calibration starts, to hide other overlays and pause gaze control.
     var onStart: (() -> Void)?
+
+    /// Called when the recording ended, finished or cancelled.
+    var onFinish: (() -> Void)?
 
     /// Creates the controller.
     ///
@@ -207,6 +210,7 @@ final class CalibrationController {
         NSCursor.unhide()
         previousApp?.activate()
         previousApp = nil
+        onFinish?()
     }
 
     private func finish() {

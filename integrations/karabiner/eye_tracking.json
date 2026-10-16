@@ -1,0 +1,48 @@
+{
+  "title": "Eye Tracking",
+  "rules": [
+    {
+      "description": "Eye Tracking: Ctrl+Option+Command+G schaltet die Blicksteuerung an/aus",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": { "key_code": "g", "modifiers": { "mandatory": ["control", "option", "command"] } },
+          "to": [{ "shell_command": "open -g 'eyetracking://toggle'" }]
+        }
+      ]
+    },
+    {
+      "description": "Eye Tracking: Caps Lock halten pausiert die Blicksteuerung (antippen = Caps Lock)",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": { "key_code": "caps_lock", "modifiers": { "optional": ["any"] } },
+          "to": [{ "shell_command": "open -g 'eyetracking://pause-start'" }],
+          "to_after_key_up": [{ "shell_command": "open -g 'eyetracking://pause-end'" }],
+          "to_if_alone": [{ "key_code": "caps_lock" }]
+        }
+      ]
+    },
+    {
+      "description": "Eye Tracking: Ctrl+Option+Command+P halten pausiert die Blicksteuerung",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": { "key_code": "p", "modifiers": { "mandatory": ["control", "option", "command"] } },
+          "to": [{ "shell_command": "open -g 'eyetracking://pause-start'" }],
+          "to_after_key_up": [{ "shell_command": "open -g 'eyetracking://pause-end'" }]
+        }
+      ]
+    },
+    {
+      "description": "Eye Tracking: Ctrl+Option+Command+K startet die Kalibrierung",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": { "key_code": "k", "modifiers": { "mandatory": ["control", "option", "command"] } },
+          "to": [{ "shell_command": "open -g 'eyetracking://recalibrate'" }]
+        }
+      ]
+    }
+  ]
+}

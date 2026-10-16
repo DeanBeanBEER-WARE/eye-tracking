@@ -10,6 +10,7 @@ final class MenuActions: NSObject {
     private let gaze: GazeService
     private let calibration: CalibrationController
     private let gazeDot: GazeDotController
+    private let pointer: PointerController
 
     /// Creates the actions.
     ///
@@ -20,9 +21,10 @@ final class MenuActions: NSObject {
     ///   - gaze: Holds the calibrated model.
     ///   - calibration: Runs calibrations.
     ///   - gazeDot: Shows the live gaze point.
+    ///   - pointer: Gaze control of the pointer.
     init(
         updater: Updater, tracking: TrackingController, preview: PreviewWindowController, gaze: GazeService,
-        calibration: CalibrationController, gazeDot: GazeDotController
+        calibration: CalibrationController, gazeDot: GazeDotController, pointer: PointerController
     ) {
         self.updater = updater
         self.tracking = tracking
@@ -30,6 +32,7 @@ final class MenuActions: NSObject {
         self.gaze = gaze
         self.calibration = calibration
         self.gazeDot = gazeDot
+        self.pointer = pointer
     }
 
     /// The current state of the status menu.
@@ -44,7 +47,8 @@ final class MenuActions: NSObject {
             cameras: tracking.cameraChoices,
             hasCalibration: gaze.model != nil,
             isCalibrating: calibration.isRunning,
-            isGazeDotVisible: gazeDot.isVisible
+            isGazeDotVisible: gazeDot.isVisible,
+            isGazeControlOn: pointer.isEnabled
         )
     }
 
@@ -56,6 +60,8 @@ final class MenuActions: NSObject {
             return
         }
         switch box.command {
+        case .toggleGazeControl:
+            pointer.toggle()
         case .calibrate:
             calibration.start()
         case .toggleGazeDot:

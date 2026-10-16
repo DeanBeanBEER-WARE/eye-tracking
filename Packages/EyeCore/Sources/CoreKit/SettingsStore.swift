@@ -11,14 +11,19 @@ public struct Settings: Codable, Equatable, Sendable {
     /// The unique identifier of the tracking camera, empty for the built-in camera.
     public var cameraID: String
 
+    /// Whether gaze control was on when the app last ran; it is switched on again at launch.
+    public var gazeControl: Bool
+
     /// Creates settings.
     ///
     /// - Parameters:
     ///   - notifiedUpdate: The display version of the last announced release.
     ///   - cameraID: The identifier of the tracking camera, empty for the built-in camera.
-    public init(notifiedUpdate: String = "", cameraID: String = "") {
+    ///   - gazeControl: Whether gaze control is on.
+    public init(notifiedUpdate: String = "", cameraID: String = "", gazeControl: Bool = false) {
         self.notifiedUpdate = notifiedUpdate
         self.cameraID = cameraID
+        self.gazeControl = gazeControl
     }
 
     /// Decodes settings, using the default for every missing key.
@@ -29,11 +34,13 @@ public struct Settings: Codable, Equatable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         notifiedUpdate = try container.decodeIfPresent(String.self, forKey: .notifiedUpdate) ?? ""
         cameraID = try container.decodeIfPresent(String.self, forKey: .cameraID) ?? ""
+        gazeControl = try container.decodeIfPresent(Bool.self, forKey: .gazeControl) ?? false
     }
 
     private enum CodingKeys: String, CodingKey {
         case notifiedUpdate = "notified_update"
         case cameraID = "camera_id"
+        case gazeControl = "gaze_control"
     }
 }
 

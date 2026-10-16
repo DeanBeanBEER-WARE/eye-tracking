@@ -22,6 +22,9 @@ final class GazeService {
     enum Listener: Hashable {
         /// The live gaze dot.
         case dot
+
+        /// Gaze control of the pointer.
+        case pointer
     }
 
     private let tracking: TrackingController
@@ -109,7 +112,7 @@ final class GazeService {
 
     private func handle(_ observation: FaceObservation?) {
         let update: GazeUpdate
-        if let observation, let features = FeatureExtractor.extract(observation) {
+        if estimator != nil, let observation, let features = FeatureExtractor.extract(observation) {
             if let estimate = estimator?.update(features) {
                 update = .estimate(estimate)
             } else {

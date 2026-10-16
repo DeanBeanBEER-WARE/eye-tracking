@@ -2,7 +2,7 @@
 
 Native macOS menu bar app that lets eye and head gaze, seen by the built-in camera, replace the movement of the external mouse. Clicks, wheel and keyboard stay physical; the built-in trackpad is never blocked. Quitting the app ends the override.
 
-Status: `0.3.0`, face tracking with MediaPipe, a camera preview (menu "Kamera-Vorschau"), the calibration over all displays (menu "Kalibrieren …") and a live gaze dot to judge it (menu "Blickpunkt anzeigen"). The gaze pointer follows in the next release.
+Status: `0.4.0`, gaze control of the pointer (menu "Blicksteuerung"), calibration over all displays (menu "Kalibrieren …"), a live gaze dot to judge it (menu "Blickpunkt anzeigen"), camera preview and Karabiner hotkeys. Snapping to UI elements, drift handling and a settings window follow.
 
 ## Requirements
 
@@ -32,6 +32,7 @@ Status: `0.3.0`, face tracking with MediaPipe, a camera preview (menu "Kamera-Vo
 | `CMediaPipe` | C++ shim around the MediaPipe Tasks C API (vendored headers of v1.1.1, Apache-2.0), loads `libmediapipe.dylib` at runtime | - |
 | `TrackingKit` | Camera capture, BGRA to RGB conversion, face landmarker, head pose, tracking engine, gaze features | `CoreKit`, `CMediaPipe` |
 | `GazeKit` | Display layout, calibration plan, ridge regression gaze model with cross-validation, One Euro smoothing, gaze estimator, calibration store | `CoreKit`, `TrackingKit` |
+| `PointerKit` | Pointer policy (saccades, dead zone, button freeze, trackpad pause), face engagement hysteresis, HID input decoding, scroll mapping, click counting | `CoreKit`, `GazeKit` |
 
 ## MediaPipe
 
@@ -71,9 +72,32 @@ The repository is private: the app asks the [GitHub CLI](https://cli.github.com)
 
 "Kalibrieren …" dims all displays and shows targets one after another: a 3x3 grid on the ultrawides, 3x2 on the built-in display (built-in first, then bottom to top), then one target per display center while the head moves slightly. Esc cancels. The model maps iris offsets, eye blendshapes and head pose to screen points: a global ridge regression picks the display, a model per display refines the position; the penalty is chosen by leave-one-target-out cross-validation, whose median error per display is reported at the end. The model is saved to `~/Library/Application Support/EyeTracking/calibration.json` and only used while the display arrangement matches the one it was calibrated on.
 
+## Gaze Control
+
+"Blicksteuerung" moves the cursor with the gaze; clicks, wheel and keyboard stay physical.
+
+- The cursor rests while the gaze rests. It follows only when the gaze leaves its resting spot by more than 2 degrees (a saccade) and stops again when the gaze settles. The dead zone is measured in gaze space, so a cursor corrected with the trackpad is not pulled back.
+- While the face is visible, the app takes exclusive access to the external mouse (IOKit HID seize of its mouse interface; the built-in trackpad, other trackpads and Karabiner's virtual devices are never touched). Its buttons, wheel and tilt are re-injected as events; its motion only drags while a button is held, and the cursor stays frozen during that time and briefly after a release, so double clicks land on one spot.
+- Moving or clicking the trackpad pauses gaze for 1.2 seconds: it is the fine correction and the way out.
+- Without a face for one second the mouse is given back and works normally; it is taken again after the face is visible for 0.4 seconds.
+- Quitting the app (or a crash) ends the exclusive access at once. Gaze control is switched on again at launch if it was on, and it stops when the display arrangement no longer matches the calibration.
+
+## Hotkeys
+
+The app handles the URL scheme `eyetracking://` with the commands `toggle`, `pause-start`, `pause-end` and `recalibrate`. `integrations/karabiner/eye_tracking.json` contains Karabiner-Elements rules (copy it to `~/.config/karabiner/assets/complex_modifications/` and enable the rules in Karabiner's settings):
+
+| Keys | Action |
+|---|---|
+| Ctrl+Option+Command+G | Gaze control on/off |
+| Caps Lock held (tap = Caps Lock) | Pause gaze control while held; the mouse works normally |
+| Ctrl+Option+Command+P held | Same pause, without Caps Lock |
+| Ctrl+Option+Command+K | Calibrate |
+
 ## Permissions
 
-The app asks for camera access when tracking starts for the first time. The camera images are processed in memory only.
+- Camera: asked when tracking starts for the first time. The camera images are processed in memory only.
+- Accessibility: needed by gaze control to move the cursor and re-inject the mouse buttons, wheel and drags. Gaze control starts automatically once it is granted.
+- Input Monitoring: only asked for if macOS refuses to hand over the mouse.
 
 ## Logs and Settings
 
