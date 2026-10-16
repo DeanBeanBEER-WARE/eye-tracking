@@ -1,0 +1,15 @@
+# Local-only agent tooling (see docs/static/RULES.md Section 3)
+CLAUDE.md
+docs/
+.claude/settings.local.json
+
+# Secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# OS and editor noise
+.DS_Store
+*.log
+*.code-workspace
