@@ -19,7 +19,7 @@ build/
 dist/
 
 # MediaPipe runtime, fetched by scripts/fetch_mediapipe.sh
-Vendor/
+/Vendor/
 
 # OS and editor noise
 .DS_Store
