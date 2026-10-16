@@ -3,191 +3,630 @@
   "strings" : {
     "alert.ok" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "OK" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
     },
-    "edit.copy" : {
+    "calibration.accuracy.line %@ %lld %lld" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kopieren" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: ca. %2$lld mm Abweichung (%3$lld pt)"
+          }
+        }
+      }
     },
-    "edit.cut" : {
+    "calibration.done.title" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Ausschneiden" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalibrierung abgeschlossen"
+          }
+        }
+      }
     },
-    "edit.menu" : {
+    "calibration.failed.message" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Bearbeiten" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es wurden zu wenige Blickdaten erfasst. Bitte bei guter Beleuchtung und mit dem Gesicht zur Kamera erneut kalibrieren."
+          }
+        }
+      }
     },
-    "edit.paste" : {
+    "calibration.failed.title" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Einsetzen" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalibrierung fehlgeschlagen"
+          }
+        }
+      }
     },
-    "edit.redo" : {
+    "calibration.head_movement" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Wiederholen" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blick auf dem Punkt halten und den Kopf dabei langsam etwas drehen und neigen."
+          }
+        }
+      }
     },
-    "edit.select_all" : {
+    "calibration.intro" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles auswählen" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalibrierung: Schau auf jeden Punkt, bis er verschwindet, und halte den Kopf dabei ruhig.\nEsc bricht ab."
+          }
+        }
+      }
     },
-    "edit.undo" : {
+    "calibration.no_face" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Widerrufen" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Gesicht erkannt – bitte in Richtung Kamera schauen."
+          }
+        }
+      }
     },
     "camera.denied.message" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Erlaube den Kamerazugriff unter Systemeinstellungen > Datenschutz & Sicherheit > Kamera und versuche es erneut." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaube den Kamerazugriff unter Systemeinstellungen > Datenschutz & Sicherheit > Kamera und versuche es erneut."
+          }
+        }
+      }
     },
     "camera.denied.title" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Kamerazugriff" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Kamerazugriff"
+          }
+        }
+      }
+    },
+    "edit.copy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieren"
+          }
+        }
+      }
+    },
+    "edit.cut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausschneiden"
+          }
+        }
+      }
+    },
+    "edit.menu" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeiten"
+          }
+        }
+      }
+    },
+    "edit.paste" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einsetzen"
+          }
+        }
+      }
+    },
+    "edit.redo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederholen"
+          }
+        }
+      }
+    },
+    "edit.select_all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles auswählen"
+          }
+        }
+      }
+    },
+    "edit.undo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widerrufen"
+          }
+        }
+      }
+    },
+    "menu.calibrate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalibrieren …"
+          }
+        }
+      }
+    },
+    "menu.calibrating" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalibrierung läuft …"
+          }
+        }
+      }
     },
     "menu.camera" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kamera" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamera"
+          }
+        }
+      }
     },
     "menu.check_updates" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach Updates suchen…" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Updates suchen…"
+          }
+        }
+      }
     },
     "menu.checking_updates" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Suche nach Updates…" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suche nach Updates…"
+          }
+        }
+      }
+    },
+    "menu.gaze_dot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blickpunkt anzeigen"
+          }
+        }
+      }
     },
     "menu.install_update %@" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update auf Version %@ installieren…" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update auf Version %@ installieren…"
+          }
+        }
+      }
     },
     "menu.preview" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kamera-Vorschau" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamera-Vorschau"
+          }
+        }
+      }
     },
     "menu.quit" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Beenden" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beenden"
+          }
+        }
+      }
     },
     "menu.show_log" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Log anzeigen…" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log anzeigen…"
+          }
+        }
+      }
     },
     "menu.version %@ %@" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ %2$@" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
     },
     "preview.face" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Gesicht erkannt" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesicht erkannt"
+          }
+        }
+      }
     },
     "preview.no_face" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Gesicht" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Gesicht"
+          }
+        }
+      }
     },
     "preview.pose %lld %lld %lld" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Drehung %1$lld°  Neigung %2$lld°  Kippung %3$lld°" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drehung %1$lld°  Neigung %2$lld°  Kippung %3$lld°"
+          }
+        }
+      }
     },
     "preview.starting" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kamera startet…" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamera startet…"
+          }
+        }
+      }
     },
     "preview.stats %lld %lld" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld fps  %2$lld ms" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld fps  %2$lld ms"
+          }
+        }
+      }
     },
     "preview.title" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kamera-Vorschau" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamera-Vorschau"
+          }
+        }
+      }
     },
     "tracking.failed.title" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Tracking konnte nicht starten" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tracking konnte nicht starten"
+          }
+        }
+      }
     },
     "update.available.message %@ %@" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Version %1$@ ist verfügbar (installiert: %2$@)." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %1$@ ist verfügbar (installiert: %2$@)."
+          }
+        }
+      }
     },
     "update.available.notification %@" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Version %@ ist verfügbar. Installieren über das Menü." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ ist verfügbar. Installieren über das Menü."
+          }
+        }
+      }
     },
     "update.available.title" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update verfügbar" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update verfügbar"
+          }
+        }
+      }
     },
     "update.button.close" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Schließen" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließen"
+          }
+        }
+      }
     },
     "update.button.later" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Später" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Später"
+          }
+        }
+      }
     },
     "update.button.open_release" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Release öffnen" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release öffnen"
+          }
+        }
+      }
     },
     "update.button.update" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Installieren" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installieren"
+          }
+        }
+      }
     },
     "update.check_failed.title" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update-Prüfung nicht möglich" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update-Prüfung nicht möglich"
+          }
+        }
+      }
     },
     "update.current.message %@" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Version %@ ist aktuell." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ ist aktuell."
+          }
+        }
+      }
     },
     "update.current.title" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Update" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Update"
+          }
+        }
+      }
     },
     "update.download.message %@" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Version %@ wird heruntergeladen…" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ wird heruntergeladen…"
+          }
+        }
+      }
     },
     "update.download.title" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update"
+          }
+        }
+      }
     },
     "update.error.copy" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die neue Version konnte nicht kopiert werden." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die neue Version konnte nicht kopiert werden."
+          }
+        }
+      }
     },
     "update.error.download" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die DMG des Releases konnte nicht heruntergeladen werden. Ist die GitHub CLI mit DeanBeanBEER-WARE angemeldet?" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die DMG des Releases konnte nicht heruntergeladen werden. Ist die GitHub CLI mit DeanBeanBEER-WARE angemeldet?"
+          }
+        }
+      }
     },
     "update.error.invalid_bundle" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die DMG enthält keine gültige Eye Tracking App." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die DMG enthält keine gültige Eye Tracking App."
+          }
+        }
+      }
     },
     "update.error.launch" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Installation konnte nicht gestartet werden." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Installation konnte nicht gestartet werden."
+          }
+        }
+      }
     },
     "update.error.mount" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die DMG konnte nicht geöffnet werden." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die DMG konnte nicht geöffnet werden."
+          }
+        }
+      }
     },
     "update.error.no_app" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die DMG enthält keine App." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die DMG enthält keine App."
+          }
+        }
+      }
     },
     "update.error.signature" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die heruntergeladene App ist nicht mit dem erwarteten Zertifikat signiert." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die heruntergeladene App ist nicht mit dem erwarteten Zertifikat signiert."
+          }
+        }
+      }
     },
     "update.failed.title" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update fehlgeschlagen" } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update fehlgeschlagen"
+          }
+        }
+      }
     },
     "update.unavailable.message" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Release-Informationen sind nicht erreichbar (privates Repository ohne angemeldete GitHub CLI)." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Release-Informationen sind nicht erreichbar (privates Repository ohne angemeldete GitHub CLI)."
+          }
+        }
+      }
     },
     "update.unknown_error" : {
       "extractionState" : "manual",
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Unbekannter Fehler." } } }
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannter Fehler."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

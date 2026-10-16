@@ -2,7 +2,7 @@
 
 Native macOS menu bar app that lets eye and head gaze, seen by the built-in camera, replace the movement of the external mouse. Clicks, wheel and keyboard stay physical; the built-in trackpad is never blocked. Quitting the app ends the override.
 
-Status: `0.2.0`, face tracking with MediaPipe and a camera preview (menu "Kamera-Vorschau"). Calibration and the gaze pointer follow in the next releases.
+Status: `0.3.0`, face tracking with MediaPipe, a camera preview (menu "Kamera-Vorschau"), the calibration over all displays (menu "Kalibrieren …") and a live gaze dot to judge it (menu "Blickpunkt anzeigen"). The gaze pointer follows in the next release.
 
 ## Requirements
 
@@ -30,7 +30,8 @@ Status: `0.2.0`, face tracking with MediaPipe and a camera preview (menu "Kamera
 | `UpdateKit` | GitHub release check, token from the GitHub CLI, asset download, installer and swap script | `CoreKit` |
 | `AppSupportKit` | AppKit helpers: alerts, notifications, process runner, detached spawn | `CoreKit` |
 | `CMediaPipe` | C++ shim around the MediaPipe Tasks C API (vendored headers of v1.1.1, Apache-2.0), loads `libmediapipe.dylib` at runtime | - |
-| `TrackingKit` | Camera capture, BGRA to RGB conversion, face landmarker, head pose, tracking engine | `CoreKit`, `CMediaPipe` |
+| `TrackingKit` | Camera capture, BGRA to RGB conversion, face landmarker, head pose, tracking engine, gaze features | `CoreKit`, `CMediaPipe` |
+| `GazeKit` | Display layout, calibration plan, ridge regression gaze model with cross-validation, One Euro smoothing, gaze estimator, calibration store | `CoreKit`, `TrackingKit` |
 
 ## MediaPipe
 
@@ -66,6 +67,10 @@ The app checks this repository for a newer release at launch and every three hou
 
 The repository is private: the app asks the [GitHub CLI](https://cli.github.com) for the token of `DeanBeanBEER-WARE` (`gh auth token --user DeanBeanBEER-WARE`, falling back to the active account), so the check works even when another `gh` account is active. The update downloads the `EyeTracking-<version>.dmg` asset through the GitHub API, verifies the bundle id `com.deanbean.eyetracking` and the signing certificate of the running app, quits, and swaps the installed bundle with a detached script that logs to `~/Library/Logs/EyeTracking/update.log` and relaunches the app.
 
+## Calibration
+
+"Kalibrieren …" dims all displays and shows targets one after another: a 3x3 grid on the ultrawides, 3x2 on the built-in display (built-in first, then bottom to top), then one target per display center while the head moves slightly. Esc cancels. The model maps iris offsets, eye blendshapes and head pose to screen points: a global ridge regression picks the display, a model per display refines the position; the penalty is chosen by leave-one-target-out cross-validation, whose median error per display is reported at the end. The model is saved to `~/Library/Application Support/EyeTracking/calibration.json` and only used while the display arrangement matches the one it was calibrated on.
+
 ## Permissions
 
 The app asks for camera access when tracking starts for the first time. The camera images are processed in memory only.
@@ -74,3 +79,4 @@ The app asks for camera access when tracking starts for the first time. The came
 
 - Log: `~/Library/Logs/EyeTracking/eye_tracking.log`
 - Settings: `~/Library/Application Support/EyeTracking/settings.json`
+- Calibration: `~/Library/Application Support/EyeTracking/calibration.json`

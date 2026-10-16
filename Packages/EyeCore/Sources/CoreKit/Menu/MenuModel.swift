@@ -1,5 +1,11 @@
 /// A command of the status menu.
 public enum MenuCommand: Equatable, Sendable {
+    /// Starts the calibration.
+    case calibrate
+
+    /// Shows or hides the live gaze dot.
+    case toggleGazeDot
+
     /// Shows or hides the camera preview window.
     case togglePreview
 
@@ -23,6 +29,15 @@ public enum MenuCommand: Equatable, Sendable {
 public enum MenuLabel: Equatable, Sendable {
     /// The app name with the installed version.
     case version(String)
+
+    /// "Calibrate…".
+    case calibrate
+
+    /// "Calibrating…", shown while a calibration runs.
+    case calibrating
+
+    /// "Show gaze point".
+    case gazeDot
 
     /// "Camera preview".
     case preview
@@ -133,6 +148,15 @@ public struct MenuState: Equatable, Sendable {
     /// The available cameras.
     public var cameras: [CameraChoice]
 
+    /// Whether a calibration for the current displays exists.
+    public var hasCalibration: Bool
+
+    /// Whether a calibration runs.
+    public var isCalibrating: Bool
+
+    /// Whether the live gaze dot is shown.
+    public var isGazeDotVisible: Bool
+
     /// Creates a state.
     ///
     /// - Parameters:
@@ -141,18 +165,27 @@ public struct MenuState: Equatable, Sendable {
     ///   - isCheckingForUpdates: Whether an update check is running.
     ///   - isPreviewVisible: Whether the camera preview window is open.
     ///   - cameras: The available cameras.
+    ///   - hasCalibration: Whether a calibration for the current displays exists.
+    ///   - isCalibrating: Whether a calibration runs.
+    ///   - isGazeDotVisible: Whether the live gaze dot is shown.
     public init(
         version: String,
         availableUpdate: String? = nil,
         isCheckingForUpdates: Bool = false,
         isPreviewVisible: Bool = false,
-        cameras: [CameraChoice] = []
+        cameras: [CameraChoice] = [],
+        hasCalibration: Bool = false,
+        isCalibrating: Bool = false,
+        isGazeDotVisible: Bool = false
     ) {
         self.version = version
         self.availableUpdate = availableUpdate
         self.isCheckingForUpdates = isCheckingForUpdates
         self.isPreviewVisible = isPreviewVisible
         self.cameras = cameras
+        self.hasCalibration = hasCalibration
+        self.isCalibrating = isCalibrating
+        self.isGazeDotVisible = isGazeDotVisible
     }
 }
 
@@ -164,6 +197,17 @@ public enum MenuModel {
     /// - Returns: The nodes of the status menu.
     public static func build(state: MenuState) -> [MenuNode] {
         var nodes: [MenuNode] = [.item(MenuItem(.version(state.version))), .separator]
+        if state.isCalibrating {
+            nodes.append(.item(MenuItem(.calibrating)))
+        } else {
+            nodes.append(.item(MenuItem(.calibrate, command: .calibrate)))
+        }
+        let canShowGaze = state.hasCalibration && !state.isCalibrating
+        nodes.append(
+            .item(
+                MenuItem(
+                    .gazeDot, command: canShowGaze ? .toggleGazeDot : nil, isChecked: state.isGazeDotVisible)))
+        nodes.append(.separator)
         nodes.append(.item(MenuItem(.preview, command: .togglePreview, isChecked: state.isPreviewVisible)))
         if !state.cameras.isEmpty {
             let cameras = state.cameras.map { camera in

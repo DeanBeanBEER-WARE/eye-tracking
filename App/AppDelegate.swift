@@ -30,7 +30,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let updater = Updater(settings: settings, notifier: notifier)
         let tracking = TrackingController(settings: settings)
         let preview = PreviewWindowController(tracking: tracking)
-        let menuActions = MenuActions(updater: updater, tracking: tracking, preview: preview)
+        let gaze = GazeService(tracking: tracking)
+        let gazeDot = GazeDotController(gaze: gaze)
+        let calibration = CalibrationController(tracking: tracking, gaze: gaze)
+        gaze.onDisplaysChanged = { [weak gazeDot] in gazeDot?.displaysChanged() }
+        calibration.onStart = { [weak gazeDot] in gazeDot?.hide() }
+        let menuActions = MenuActions(
+            updater: updater, tracking: tracking, preview: preview, gaze: gaze, calibration: calibration,
+            gazeDot: gazeDot)
         let statusItemController = StatusItemController(actions: menuActions)
         self.updater = updater
         self.tracking = tracking

@@ -7,7 +7,7 @@ PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$PROJECT_DIR"
 
 SOURCES="Packages/EyeCore/Sources"
-MODULES="CoreKit UpdateKit AppSupportKit TrackingKit"
+MODULES="CoreKit UpdateKit AppSupportKit TrackingKit GazeKit"
 violations=0
 
 # Lists the files below the given paths that import the module and marks the run as failed.
@@ -28,6 +28,7 @@ forbid() {
 allowed() {
     case "$1" in
         CoreKit) echo "" ;;
+        GazeKit) echo "CoreKit TrackingKit" ;;
         *) echo "CoreKit" ;;
     esac
 }

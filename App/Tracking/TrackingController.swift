@@ -10,11 +10,18 @@ final class TrackingController {
     enum Consumer: Hashable {
         /// The camera preview window.
         case preview
+
+        /// The calibration.
+        case calibration
+
+        /// The gaze estimation (gaze dot, pointer).
+        case gaze
     }
 
     private let settings: SettingsStore
     private let log = Log("Tracking")
     private var consumers: Set<Consumer> = []
+    private var observers: [Consumer: (FaceObservation?) -> Void] = [:]
     private var startTask: Task<Void, Never>?
     private var isRunning = false
 
@@ -27,6 +34,29 @@ final class TrackingController {
     init(settings: SettingsStore) {
         self.settings = settings
         engine = TrackingEngine(resources: Self.resources())
+        engine.setObservationHandler { [weak self] observation in
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    self?.deliver(observation)
+                }
+            }
+        }
+    }
+
+    /// Sets the receiver of a consumer's tracking results, called on the main thread for every frame
+    /// (`nil` for a frame without a face).
+    ///
+    /// - Parameters:
+    ///   - consumer: The consumer.
+    ///   - handler: The receiver, or `nil` to remove it.
+    func setObserver(_ consumer: Consumer, _ handler: ((FaceObservation?) -> Void)?) {
+        observers[consumer] = handler
+    }
+
+    private func deliver(_ observation: FaceObservation?) {
+        for handler in observers.values {
+            handler(observation)
+        }
     }
 
     /// The cameras for the camera submenu, with the tracking camera selected.

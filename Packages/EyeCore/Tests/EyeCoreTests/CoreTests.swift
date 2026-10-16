@@ -5,12 +5,15 @@ import Testing
 
 @Suite("Core")
 struct CoreTests {
-    @Test("The menu shows version, preview, update check, log and quit")
+    @Test("The menu shows version, calibration, gaze dot, preview, update check, log and quit")
     func menuDefault() {
         let nodes = MenuModel.build(state: MenuState(version: "0.1.0"))
         #expect(
             nodes == [
                 .item(MenuItem(.version("0.1.0"))),
+                .separator,
+                .item(MenuItem(.calibrate, command: .calibrate)),
+                .item(MenuItem(.gazeDot)),
                 .separator,
                 .item(MenuItem(.preview, command: .togglePreview)),
                 .separator,
@@ -21,12 +24,21 @@ struct CoreTests {
             ])
     }
 
+    @Test("The gaze dot needs a calibration; a running calibration disables both entries")
+    func menuCalibration() {
+        let ready = MenuModel.build(state: MenuState(version: "0.3.0", hasCalibration: true, isGazeDotVisible: true))
+        #expect(ready[3] == .item(MenuItem(.gazeDot, command: .toggleGazeDot, isChecked: true)))
+        let running = MenuModel.build(state: MenuState(version: "0.3.0", hasCalibration: true, isCalibrating: true))
+        #expect(running[2] == .item(MenuItem(.calibrating)))
+        #expect(running[3] == .item(MenuItem(.gazeDot)))
+    }
+
     @Test("A found update adds the install entry; a running check disables the check entry")
     func menuUpdate() {
         let nodes = MenuModel.build(
             state: MenuState(version: "0.1.0", availableUpdate: "0.1.1", isCheckingForUpdates: true))
-        #expect(nodes[4] == .item(MenuItem(.installUpdate("0.1.1"), command: .installUpdate)))
-        #expect(nodes[5] == .item(MenuItem(.checkingForUpdates)))
+        #expect(nodes[7] == .item(MenuItem(.installUpdate("0.1.1"), command: .installUpdate)))
+        #expect(nodes[8] == .item(MenuItem(.checkingForUpdates)))
     }
 
     @Test("Cameras form a submenu with the selected one checked; the open preview is checked")
@@ -38,9 +50,9 @@ struct CoreTests {
                 CameraChoice(id: "b", name: "iPhone", isSelected: false),
             ])
         let nodes = MenuModel.build(state: state)
-        #expect(nodes[2] == .item(MenuItem(.preview, command: .togglePreview, isChecked: true)))
+        #expect(nodes[5] == .item(MenuItem(.preview, command: .togglePreview, isChecked: true)))
         #expect(
-            nodes[3]
+            nodes[6]
                 == .submenu(
                     .camera,
                     [

@@ -11,6 +11,12 @@ enum MenuStrings {
         switch label {
         case .version(let version):
             String(localized: "menu.version \(AppInfo.displayName) \(version)")
+        case .calibrate:
+            String(localized: "menu.calibrate")
+        case .calibrating:
+            String(localized: "menu.calibrating")
+        case .gazeDot:
+            String(localized: "menu.gaze_dot")
         case .preview:
             String(localized: "menu.preview")
         case .camera:
