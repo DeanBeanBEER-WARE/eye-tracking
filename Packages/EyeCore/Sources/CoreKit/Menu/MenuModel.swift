@@ -6,6 +6,9 @@ public enum MenuCommand: Equatable, Sendable {
     /// Installs the newer release found by the last check.
     case installUpdate
 
+    /// Opens the log file.
+    case showLog
+
     /// Quits the app, which ends every override.
     case quit
 }
@@ -23,6 +26,9 @@ public enum MenuLabel: Equatable, Sendable {
 
     /// "Install update to version", with the display version of the release.
     case installUpdate(String)
+
+    /// "Show log".
+    case showLog
 
     /// "Quit".
     case quit
@@ -102,6 +108,7 @@ public enum MenuModel {
             nodes.append(.item(MenuItem(.checkForUpdates, command: .checkForUpdates)))
         }
         nodes.append(.separator)
+        nodes.append(.item(MenuItem(.showLog, command: .showLog)))
         nodes.append(.item(MenuItem(.quit, command: .quit, keyEquivalent: "q")))
         return nodes
     }

@@ -49,6 +49,10 @@
       "extractionState" : "manual",
       "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Beenden" } } }
     },
+    "menu.show_log" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Log anzeigen…" } } }
+    },
     "menu.version %@ %@" : {
       "extractionState" : "manual",
       "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ %2$@" } } }

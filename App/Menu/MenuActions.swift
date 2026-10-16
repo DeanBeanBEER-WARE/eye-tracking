@@ -36,6 +36,8 @@ final class MenuActions: NSObject {
             updater.checkManually()
         case .installUpdate:
             updater.installAvailable()
+        case .showLog:
+            NSWorkspace.shared.open(Paths.standard.logDirectory.appendingPathComponent(RotatingLogFile.defaultFileName))
         case .quit:
             NSApp.terminate(nil)
         }

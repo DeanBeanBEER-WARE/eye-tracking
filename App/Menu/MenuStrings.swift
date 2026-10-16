@@ -17,6 +17,8 @@ enum MenuStrings {
             String(localized: "menu.checking_updates")
         case .installUpdate(let version):
             String(localized: "menu.install_update \(version)")
+        case .showLog:
+            String(localized: "menu.show_log")
         case .quit:
             String(localized: "menu.quit")
         }

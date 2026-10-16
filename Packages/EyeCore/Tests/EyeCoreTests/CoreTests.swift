@@ -5,7 +5,7 @@ import Testing
 
 @Suite("Core")
 struct CoreTests {
-    @Test("The menu shows version, update check and quit")
+    @Test("The menu shows version, update check, log and quit")
     func menuDefault() {
         let nodes = MenuModel.build(state: MenuState(version: "0.1.0"))
         #expect(
@@ -14,6 +14,7 @@ struct CoreTests {
                 .separator,
                 .item(MenuItem(.checkForUpdates, command: .checkForUpdates)),
                 .separator,
+                .item(MenuItem(.showLog, command: .showLog)),
                 .item(MenuItem(.quit, command: .quit, keyEquivalent: "q")),
             ])
     }
