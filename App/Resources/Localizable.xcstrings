@@ -89,6 +89,50 @@
         }
       }
     },
+    "calibration.outdated.later" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Später"
+          }
+        }
+      }
+    },
+    "calibration.outdated.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Augenmessung wurde verbessert (vertikale Blickrichtung, getrennte Augen, dichteres Raster). Die bisherige Kalibrierung passt dazu nicht mehr; bis zur neuen Kalibrierung bleibt die Blicksteuerung aus.\n\nDie Kalibrierung dauert etwa 90 Sekunden. Halte den Kopf bei den Rasterpunkten möglichst ruhig und schau den Punkt direkt an."
+          }
+        }
+      }
+    },
+    "calibration.outdated.now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt kalibrieren"
+          }
+        }
+      }
+    },
+    "calibration.outdated.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte neu kalibrieren"
+          }
+        }
+      }
+    },
     "camera.denied.message" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -305,6 +349,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Log anzeigen…"
+          }
+        }
+      }
+    },
+    "menu.snapping" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Bedienelemente einrasten"
           }
         }
       }

@@ -50,7 +50,7 @@ public enum CalibrationPlan {
     /// The seconds samples are taken at a head movement target.
     public static let headMovementSampleTime: TimeInterval = 3.0
 
-    /// The targets for all displays: a 3x3 grid on wide displays, 3x2 on the others, built-in display first,
+    /// The targets for all displays: a 5x3 grid on wide displays, 3x3 on the others, built-in display first,
     /// then the others from bottom to top, each grid in snake order; followed by one head movement target in the
     /// center of every display.
     ///
@@ -66,8 +66,8 @@ public enum CalibrationPlan {
         var targets: [CalibrationTarget] = []
         for display in ordered {
             let wide = display.frame.width / max(display.frame.height, 1) >= 1.9
-            let columns: [CGFloat] = [0.08, 0.5, 0.92]
-            let rows: [CGFloat] = wide ? [0.1, 0.5, 0.9] : [0.15, 0.85]
+            let columns: [CGFloat] = wide ? [0.06, 0.28, 0.5, 0.72, 0.94] : [0.08, 0.5, 0.92]
+            let rows: [CGFloat] = wide ? [0.1, 0.5, 0.9] : [0.12, 0.5, 0.88]
             for (rowIndex, y) in rows.enumerated() {
                 let line = rowIndex.isMultiple(of: 2) ? columns : columns.reversed()
                 for x in line {

@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import TrackingKit
 
 /// One feature vector taken while the user looked at a calibration target.
 public struct CalibrationSample: Codable, Equatable, Sendable {
@@ -9,14 +10,20 @@ public struct CalibrationSample: Codable, Equatable, Sendable {
     /// The index of the target in ``CalibrationData/targets``.
     public var target: Int
 
+    /// The raw eye landmarks, pose matrix and eye blendshapes (``TrackingKit/FeatureExtractor/raw(_:)``), kept
+    /// for offline analysis of new features.
+    public var raw: [Float]?
+
     /// Creates a sample.
     ///
     /// - Parameters:
     ///   - vector: The feature vector.
     ///   - target: The target index.
-    public init(vector: [Double], target: Int) {
+    ///   - raw: The raw measurements, if recorded.
+    public init(vector: [Double], target: Int, raw: [Float]? = nil) {
         self.vector = vector
         self.target = target
+        self.raw = raw
     }
 }
 
@@ -31,16 +38,23 @@ public struct CalibrationData: Codable, Equatable, Sendable {
     /// The samples.
     public var samples: [CalibrationSample]
 
+    /// The camera the calibration was recorded with (`nil` for calibrations from before this was recorded).
+    public var cameraID: String?
+
     /// Creates calibration data.
     ///
     /// - Parameters:
     ///   - layout: The displays.
     ///   - targets: The targets.
     ///   - samples: The samples.
-    public init(layout: ScreenLayout, targets: [CalibrationTarget], samples: [CalibrationSample]) {
+    ///   - cameraID: The camera.
+    public init(
+        layout: ScreenLayout, targets: [CalibrationTarget], samples: [CalibrationSample], cameraID: String? = nil
+    ) {
         self.layout = layout
         self.targets = targets
         self.samples = samples
+        self.cameraID = cameraID
     }
 }
 
@@ -83,8 +97,8 @@ public struct GazeModel: Codable, Equatable, Sendable {
     /// because a quadratic model on few targets extrapolates badly.
     static let quadraticTargetsPerDisplay = 9
 
-    /// The base features that get quadratic terms: iris x and y, blendshape x and y, yaw, pitch.
-    static let quadraticFeatures = [0, 1, 2, 3, 4, 5]
+    /// The base features that get quadratic terms: iris x and y of both eyes, blendshape x and y, yaw, pitch.
+    static let quadraticFeatures = [0, 1, 2, 3, 4, 5, 6, 7]
 
     struct Axes: Codable, Equatable, Sendable {
         var x: [Double]
@@ -103,6 +117,9 @@ public struct GazeModel: Codable, Equatable, Sendable {
     /// When the model was fitted.
     public var createdAt: Date
 
+    /// The feature vector version the model was fitted on (`nil` for the first version).
+    public var featureVersion: Int?
+
     var mean: [Double]
     var scale: [Double]
     var global: Axes
@@ -111,6 +128,11 @@ public struct GazeModel: Codable, Equatable, Sendable {
     /// The displays the model was calibrated for.
     public var layout: ScreenLayout {
         data.layout
+    }
+
+    /// Whether the model fits the current feature vector; an older model needs a new calibration.
+    public var isCurrent: Bool {
+        featureVersion == GazeFeatures.vectorVersion && mean.count == GazeFeatures.vectorLength
     }
 
     /// Fits a model, choosing the penalty by leave-one-target-out cross-validation.
@@ -177,8 +199,9 @@ public struct GazeModel: Codable, Equatable, Sendable {
                 displayID: display.id, medianPoints: points, medianMillimeters: points * display.millimetersPerPoint)
         }
         return GazeModel(
-            data: data, lambda: best.lambda, accuracy: accuracy, createdAt: now, mean: mean, scale: scale,
-            global: models.global, local: models.local)
+            data: data, lambda: best.lambda, accuracy: accuracy, createdAt: now,
+            featureVersion: GazeFeatures.vectorVersion, mean: mean, scale: scale, global: models.global,
+            local: models.local)
     }
 
     /// Predicts the screen point of a feature vector.

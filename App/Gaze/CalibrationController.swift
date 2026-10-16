@@ -132,7 +132,8 @@ final class CalibrationController {
         guard stage == .sample, !features.isBlinking else {
             return
         }
-        samples.append(CalibrationSample(vector: features.vector, target: index))
+        samples.append(
+            CalibrationSample(vector: features.vector, target: index, raw: FeatureExtractor.raw(observation)))
         targetSamples += 1
     }
 
@@ -215,7 +216,8 @@ final class CalibrationController {
 
     private func finish() {
         stopRecording()
-        let data = CalibrationData(layout: layout, targets: targets, samples: samples)
+        let data = CalibrationData(
+            layout: layout, targets: targets, samples: samples, cameraID: tracking.activeCameraID)
         log.info("Calibration recorded \(samples.count) samples; fitting.")
         Task {
             let model = await Task.detached { GazeModel.fit(data) }.value

@@ -45,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             pointer?.setSuspended(true)
         }
         calibration.onFinish = { [weak pointer] in pointer?.setSuspended(false) }
+        tracking.onCameraChanged = { [weak gaze] in gaze?.cameraChanged() }
         let menuActions = MenuActions(
             updater: updater, tracking: tracking, preview: preview, gaze: gaze, calibration: calibration,
             gazeDot: gazeDot, pointer: pointer)
@@ -57,6 +58,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.statusItemController = statusItemController
         updater.start()
         pointer.restore()
+        if gaze.needsRecalibration {
+            log.info("The saved calibration is outdated.")
+            let calibrate = Alerts.choose(
+                String(localized: "calibration.outdated.title"), String(localized: "calibration.outdated.message"),
+                primary: String(localized: "calibration.outdated.now"),
+                secondary: String(localized: "calibration.outdated.later"))
+            if calibrate {
+                calibration.start()
+            }
+        }
     }
 
     /// Handles the hotkey URLs that Karabiner opens with `open -g eyetracking://...`.

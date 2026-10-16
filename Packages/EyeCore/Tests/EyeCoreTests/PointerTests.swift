@@ -74,6 +74,44 @@ struct PointerTests {
         #expect(fresh != nil)
     }
 
+    @Test("A landing is reported once per rest and cleared by the next change")
+    func landing() {
+        var policy = PointerPolicy()
+        _ = Self.move(&policy, 100, 100, at: 0)
+        #expect(policy.landing == nil)
+        _ = Self.move(&policy, 101, 100, at: 0.2)
+        #expect(policy.landing == CGPoint(x: 101, y: 100))
+        let rested = policy.epoch
+        _ = Self.move(&policy, 110, 100, at: 0.3)
+        #expect(policy.epoch == rested && policy.landing != nil)
+        policy.manualMovement(now: 0.4)
+        #expect(policy.epoch > rested && policy.landing == nil)
+    }
+
+    @Test("Snapping picks the nearest small element and refuses ambiguous or distant ones")
+    func snapping() {
+        let point = CGPoint(x: 100, y: 100)
+        let button = CGRect(x: 120, y: 90, width: 60, height: 20)
+        #expect(SnapSelector.choose(from: [button], near: point, radius: 50) == CGPoint(x: 150, y: 100))
+        #expect(SnapSelector.choose(from: [button], near: point, radius: 10) == nil)
+        // Inside a small element the cursor moves to its center; inside a large one it stays.
+        let inside = CGRect(x: 80, y: 90, width: 60, height: 20)
+        #expect(SnapSelector.choose(from: [inside], near: point, radius: 50) == CGPoint(x: 110, y: 100))
+        let wide = CGRect(x: 0, y: 80, width: 600, height: 40)
+        #expect(SnapSelector.choose(from: [wide], near: point, radius: 50) == nil)
+        // A link inside a toolbar wins over the toolbar.
+        let link = CGRect(x: 95, y: 95, width: 30, height: 10)
+        #expect(SnapSelector.choose(from: [wide, link], near: point, radius: 50) == CGPoint(x: 110, y: 100))
+        // Two buttons at almost the same distance on both sides: ambiguous.
+        let left = CGRect(x: 40, y: 90, width: 40, height: 20)
+        let right = CGRect(x: 122, y: 90, width: 40, height: 20)
+        #expect(SnapSelector.choose(from: [left, right], near: point, radius: 50) == nil)
+        #expect(
+            SnapSelector.choose(from: [CGRect(x: 0, y: 0, width: 2000, height: 1000)], near: point, radius: 50) == nil)
+        let samples = SnapSelector.samplePoints(around: point, radius: 40)
+        #expect(samples.count == 17 && samples[0] == point)
+    }
+
     @Test("Engagement waits for a steady face and survives short losses")
     func engagement() {
         var tracker = EngagementTracker(releaseAfter: 1.0, engageAfter: 0.4)

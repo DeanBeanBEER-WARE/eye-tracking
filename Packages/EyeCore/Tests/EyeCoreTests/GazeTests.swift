@@ -57,13 +57,13 @@ struct GazeTests {
     @Test("The plan visits the built-in display first, grids in snake order, head movement last")
     func plan() {
         let targets = CalibrationPlan.targets(for: Self.layout)
-        #expect(targets.count == 6 + 9 + 9 + 3)
-        #expect(targets.prefix(6).allSatisfy { $0.displayID == 1 && $0.phase == .grid })
-        #expect(targets[6].displayID == 2 && targets[15].displayID == 12)
+        #expect(targets.count == 9 + 15 + 15 + 3)
+        #expect(targets.prefix(9).allSatisfy { $0.displayID == 1 && $0.phase == .grid })
+        #expect(targets[9].displayID == 2 && targets[24].displayID == 12)
         #expect(
-            targets[0].normalized == CGPoint(x: 0.08, y: 0.15) && targets[3].normalized == CGPoint(x: 0.92, y: 0.85))
+            targets[0].normalized == CGPoint(x: 0.08, y: 0.12) && targets[3].normalized == CGPoint(x: 0.92, y: 0.5))
         #expect(targets.suffix(3).allSatisfy { $0.phase == .headMovement && $0.normalized == CGPoint(x: 0.5, y: 0.5) })
-        #expect(targets[6].point == CGPoint(x: 0.08 * 3440, y: 0.1 * 1440))
+        #expect(targets[9].point == CGPoint(x: 0.06 * 3440, y: 0.1 * 1440))
     }
 
     @Test("Layout lookups, clamping and the signature")
@@ -169,5 +169,9 @@ struct GazeTests {
         let model = try #require(GazeModel.fit(Self.calibration(), now: Date(timeIntervalSince1970: 1_790_000_000)))
         try store.save(model)
         #expect(store.load() == model)
+        #expect(model.isCurrent)
+        var outdated = model
+        outdated.featureVersion = nil
+        #expect(!outdated.isCurrent)
     }
 }

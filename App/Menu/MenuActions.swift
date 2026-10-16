@@ -48,7 +48,8 @@ final class MenuActions: NSObject {
             hasCalibration: gaze.model != nil,
             isCalibrating: calibration.isRunning,
             isGazeDotVisible: gazeDot.isVisible,
-            isGazeControlOn: pointer.isEnabled
+            isGazeControlOn: pointer.isEnabled,
+            isSnappingOn: pointer.isSnappingOn
         )
     }
 
@@ -62,6 +63,8 @@ final class MenuActions: NSObject {
         switch box.command {
         case .toggleGazeControl:
             pointer.toggle()
+        case .toggleSnapping:
+            pointer.toggleSnapping()
         case .calibrate:
             calibration.start()
         case .toggleGazeDot:

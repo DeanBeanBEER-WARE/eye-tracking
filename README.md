@@ -2,7 +2,7 @@
 
 Native macOS menu bar app that lets eye and head gaze, seen by the built-in camera, replace the movement of the external mouse. Clicks, wheel and keyboard stay physical; the built-in trackpad is never blocked. Quitting the app ends the override.
 
-Status: `0.4.0`, gaze control of the pointer (menu "Blicksteuerung"), calibration over all displays (menu "Kalibrieren …"), a live gaze dot to judge it (menu "Blickpunkt anzeigen"), camera preview and Karabiner hotkeys. Snapping to UI elements, drift handling and a settings window follow.
+Status: `0.5.0`, gaze control of the pointer (menu "Blicksteuerung") with snapping to clickable elements (menu "Auf Bedienelemente einrasten"), calibration over all displays (menu "Kalibrieren …"), a live gaze dot to judge it (menu "Blickpunkt anzeigen"), camera preview and Karabiner hotkeys. Drift handling and a settings window follow.
 
 ## Requirements
 
@@ -32,7 +32,7 @@ Status: `0.4.0`, gaze control of the pointer (menu "Blicksteuerung"), calibratio
 | `CMediaPipe` | C++ shim around the MediaPipe Tasks C API (vendored headers of v1.1.1, Apache-2.0), loads `libmediapipe.dylib` at runtime | - |
 | `TrackingKit` | Camera capture, BGRA to RGB conversion, face landmarker, head pose, tracking engine, gaze features | `CoreKit`, `CMediaPipe` |
 | `GazeKit` | Display layout, calibration plan, ridge regression gaze model with cross-validation, One Euro smoothing, gaze estimator, calibration store | `CoreKit`, `TrackingKit` |
-| `PointerKit` | Pointer policy (saccades, dead zone, button freeze, trackpad pause), face engagement hysteresis, HID input decoding, scroll mapping, click counting | `CoreKit`, `GazeKit` |
+| `PointerKit` | Pointer policy (saccades, dead zone, button freeze, trackpad pause, landings), face engagement hysteresis, snap target selection, HID input decoding, scroll mapping, click counting | `CoreKit`, `GazeKit` |
 
 ## MediaPipe
 
@@ -70,7 +70,11 @@ The repository is private: the app asks the [GitHub CLI](https://cli.github.com)
 
 ## Calibration
 
-"Kalibrieren …" dims all displays and shows targets one after another: a 3x3 grid on the ultrawides, 3x2 on the built-in display (built-in first, then bottom to top), then one target per display center while the head moves slightly. Esc cancels. The model maps iris offsets, eye blendshapes and head pose to screen points: a global ridge regression picks the display, a model per display refines the position; the penalty is chosen by leave-one-target-out cross-validation, whose median error per display is reported at the end. The model is saved to `~/Library/Application Support/EyeTracking/calibration.json` and only used while the display arrangement matches the one it was calibrated on.
+"Kalibrieren …" dims all displays and shows targets one after another: a 5x3 grid on the ultrawides, 3x3 on the built-in display (built-in first, then bottom to top), then one target per display center while the head moves slightly. Esc cancels. The model maps iris offsets, eye blendshapes and head pose to screen points: a global ridge regression picks the display, a model per display refines the position; the penalty is chosen by leave-one-target-out cross-validation, whose median error per display is reported at the end. The model is saved to `~/Library/Application Support/EyeTracking/calibration.json` and only used while the display arrangement, the camera and the feature version match the ones it was calibrated with. Each sample also keeps the raw eye landmarks, pose matrix and eye blendshapes, so new features can be evaluated offline on a real calibration.
+
+The features are the iris offsets of each eye along and across the line through its corners (normalized by the eye width), the eye-look blendshapes, head yaw, pitch, roll and position, and the lid openings. A blink needs both eyes closed, because the eye turned away from the camera often looks closed.
+
+Accuracy depends mostly on where the camera sits. With the built-in camera of a MacBook placed to the left of the main displays, the head turns 40-50 degrees away from it when looking at them, and the eye measurements degrade; a camera centered above the main displays (for example an iPhone as Continuity Camera, selectable in the "Kamera" menu) keeps the face frontal.
 
 ## Gaze Control
 
@@ -80,6 +84,7 @@ The repository is private: the app asks the [GitHub CLI](https://cli.github.com)
 - While the face is visible, the app takes exclusive access to the external mouse (IOKit HID seize of its mouse interface; the built-in trackpad, other trackpads and Karabiner's virtual devices are never touched). Its buttons, wheel and tilt are re-injected as events; its motion only drags while a button is held, and the cursor stays frozen during that time and briefly after a release, so double clicks land on one spot.
 - Moving or clicking the trackpad pauses gaze for 1.2 seconds: it is the fine correction and the way out.
 - Without a face for one second the mouse is given back and works normally; it is taken again after the face is visible for 0.4 seconds.
+- Snapping: when the gaze has landed, the app looks for clickable elements (buttons, links, fields, tabs, menu items) within 2.5 degrees through the Accessibility API and moves the cursor onto the nearest one, unless two are about equally near.
 - Quitting the app (or a crash) ends the exclusive access at once. Gaze control is switched on again at launch if it was on, and it stops when the display arrangement no longer matches the calibration.
 
 ## Hotkeys
@@ -96,7 +101,7 @@ The app handles the URL scheme `eyetracking://` with the commands `toggle`, `pau
 ## Permissions
 
 - Camera: asked when tracking starts for the first time. The camera images are processed in memory only.
-- Accessibility: needed by gaze control to move the cursor and re-inject the mouse buttons, wheel and drags. Gaze control starts automatically once it is granted.
+- Accessibility: needed by gaze control to move the cursor, re-inject the mouse buttons, wheel and drags and find clickable elements for snapping. Gaze control starts automatically once it is granted.
 - Input Monitoring: only asked for if macOS refuses to hand over the mouse.
 
 ## Logs and Settings

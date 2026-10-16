@@ -1,15 +1,17 @@
 import AppKit
+import ApplicationServices
 import CoreGraphics
 import IOKit.hid
 
 /// The privacy permissions of gaze control.
 ///
-/// Posting mouse events needs Accessibility. Seizing a pure mouse interface needs no permission (only keyboards
-/// do), so Input Monitoring is only asked for when the system refuses to hand over the mouse.
+/// Accessibility covers posting mouse events and reading the elements for snapping; it is read live, so a grant
+/// takes effect without a restart. Seizing a pure mouse interface needs no permission (only keyboards do), so Input
+/// Monitoring is only asked for when the system refuses to hand over the mouse.
 enum PointerPermissions {
     /// Whether the app may post mouse events.
     static var canPostEvents: Bool {
-        CGPreflightPostEventAccess()
+        AXIsProcessTrusted() || CGPreflightPostEventAccess()
     }
 
     /// Whether the app may read input devices.
@@ -19,8 +21,8 @@ enum PointerPermissions {
 
     /// Asks the system for Accessibility; macOS shows its prompt and lists the app in the settings.
     static func requestPostEvents() {
-        if !canPostEvents {
-            _ = CGRequestPostEventAccess()
+        if !AXIsProcessTrusted() {
+            ElementSnapper.requestTrust()
         }
     }
 

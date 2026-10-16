@@ -13,6 +13,8 @@ enum MenuStrings {
             String(localized: "menu.version \(AppInfo.displayName) \(version)")
         case .gazeControl:
             String(localized: "menu.gaze_control")
+        case .snapping:
+            String(localized: "menu.snapping")
         case .calibrate:
             String(localized: "menu.calibrate")
         case .calibrating:

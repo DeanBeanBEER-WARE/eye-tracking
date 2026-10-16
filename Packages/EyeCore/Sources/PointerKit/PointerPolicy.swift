@@ -66,6 +66,12 @@ public struct PointerPolicy: Sendable {
     private var stillUntil: TimeInterval = 0
     private var reanchor = false
 
+    /// Counts the changes of what the cursor should do; a pending snap is only applied while it is unchanged.
+    public private(set) var epoch = 0
+
+    /// Where the cursor came to rest after following the gaze, until the next change.
+    public private(set) var landing: CGPoint?
+
     /// Creates a policy; the first estimate moves the cursor.
     ///
     /// - Parameter configuration: The tuning.
@@ -112,7 +118,6 @@ public struct PointerPolicy: Sendable {
         guard degrees > configuration.deadZoneDegrees else {
             return nil
         }
-        following = true
         restingSince = nil
         return follow(estimate, now: now)
     }
@@ -130,8 +135,7 @@ public struct PointerPolicy: Sendable {
             heldButtons.remove(button)
             stillUntil = max(stillUntil, now + configuration.releaseHold)
         }
-        following = false
-        reanchor = true
+        interrupt()
     }
 
     /// Records that another device (the trackpad) moved the cursor; gaze pauses for a moment.
@@ -139,8 +143,7 @@ public struct PointerPolicy: Sendable {
     /// - Parameter now: The current time in seconds.
     public mutating func manualMovement(now: TimeInterval) {
         stillUntil = max(stillUntil, now + configuration.manualPause)
-        following = false
-        reanchor = true
+        interrupt()
     }
 
     /// Forgets all state, for example after gaze control was off; the next estimate moves the cursor.
@@ -151,16 +154,31 @@ public struct PointerPolicy: Sendable {
         heldButtons = []
         stillUntil = 0
         reanchor = false
+        landing = nil
+        epoch += 1
+    }
+
+    private mutating func interrupt() {
+        following = false
+        reanchor = true
+        landing = nil
+        epoch += 1
     }
 
     private mutating func follow(_ estimate: GazeEstimate, now: TimeInterval) -> CGPoint {
-        following = true
+        if !following {
+            following = true
+            landing = nil
+            epoch += 1
+        }
         if estimate.speed < configuration.settleSpeed {
             let since = restingSince ?? now
             restingSince = since
             if now - since >= configuration.settleDuration {
                 following = false
                 anchor = estimate.point
+                landing = estimate.point
+                epoch += 1
             }
         } else {
             restingSince = nil

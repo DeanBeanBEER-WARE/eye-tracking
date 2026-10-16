@@ -3,6 +3,9 @@ public enum MenuCommand: Equatable, Sendable {
     /// Switches gaze control of the pointer on or off.
     case toggleGazeControl
 
+    /// Switches snapping to clickable elements on or off.
+    case toggleSnapping
+
     /// Starts the calibration.
     case calibrate
 
@@ -35,6 +38,9 @@ public enum MenuLabel: Equatable, Sendable {
 
     /// "Gaze control".
     case gazeControl
+
+    /// "Snap to controls".
+    case snapping
 
     /// "Calibrate…".
     case calibrate
@@ -166,6 +172,9 @@ public struct MenuState: Equatable, Sendable {
     /// Whether gaze control of the pointer is on.
     public var isGazeControlOn: Bool
 
+    /// Whether the cursor snaps to clickable elements.
+    public var isSnappingOn: Bool
+
     /// Creates a state.
     ///
     /// - Parameters:
@@ -178,6 +187,7 @@ public struct MenuState: Equatable, Sendable {
     ///   - isCalibrating: Whether a calibration runs.
     ///   - isGazeDotVisible: Whether the live gaze dot is shown.
     ///   - isGazeControlOn: Whether gaze control of the pointer is on.
+    ///   - isSnappingOn: Whether the cursor snaps to clickable elements.
     public init(
         version: String,
         availableUpdate: String? = nil,
@@ -187,7 +197,8 @@ public struct MenuState: Equatable, Sendable {
         hasCalibration: Bool = false,
         isCalibrating: Bool = false,
         isGazeDotVisible: Bool = false,
-        isGazeControlOn: Bool = false
+        isGazeControlOn: Bool = false,
+        isSnappingOn: Bool = false
     ) {
         self.version = version
         self.availableUpdate = availableUpdate
@@ -198,6 +209,7 @@ public struct MenuState: Equatable, Sendable {
         self.isCalibrating = isCalibrating
         self.isGazeDotVisible = isGazeDotVisible
         self.isGazeControlOn = isGazeControlOn
+        self.isSnappingOn = isSnappingOn
     }
 }
 
@@ -217,6 +229,7 @@ public enum MenuModel {
                 MenuItem(
                     .gazeControl, command: canToggleControl ? .toggleGazeControl : nil, isChecked: state.isGazeControlOn
                 )))
+        nodes.append(.item(MenuItem(.snapping, command: .toggleSnapping, isChecked: state.isSnappingOn)))
         if state.isCalibrating {
             nodes.append(.item(MenuItem(.calibrating)))
         } else {

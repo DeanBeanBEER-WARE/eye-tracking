@@ -13,6 +13,9 @@ final class PointerController {
     /// The points a device count of the seized mouse drags.
     private static let dragGain: CGFloat = 0.75
 
+    /// The search radius for snapping in degrees of gaze angle.
+    private static let snapRadiusDegrees = 2.5
+
     /// The seconds between attempts to take a mouse the system refused.
     private static let seizeRetryInterval: TimeInterval = 3
 
@@ -25,6 +28,9 @@ final class PointerController {
     private let seizer = MouseSeizer()
     private let poster = EventPoster()
     private let monitor = ManualInputMonitor()
+    private let snapper = ElementSnapper()
+    private var snapEpoch = -1
+    private var askedForAccessibility = false
     private var policy = PointerPolicy()
     private var engagement = EngagementTracker()
     private var layout = DisplayLayoutReader.current()
@@ -38,6 +44,25 @@ final class PointerController {
 
     /// Whether gaze control is on.
     private(set) var isEnabled = false
+
+    /// Whether the cursor snaps to clickable elements after the gaze landed.
+    var isSnappingOn: Bool {
+        settings.load().snapping
+    }
+
+    /// Switches snapping on or off.
+    func toggleSnapping() {
+        let enabled = !isSnappingOn
+        do {
+            try settings.update { $0.snapping = enabled }
+        } catch {
+            log.error("Could not save the snapping state: \(error)")
+        }
+        log.info("Snapping \(enabled ? "on" : "off").")
+        if enabled, isEnabled, !ElementSnapper.isTrusted {
+            ElementSnapper.requestTrust()
+        }
+    }
 
     /// Creates the controller; gaze control starts with ``restore()`` or ``toggle()``.
     ///
@@ -247,6 +272,31 @@ final class PointerController {
         let millimetersPerPoint = layout.display(id: estimate.displayID)?.millimetersPerPoint ?? 0.25
         if let target = policy.target(for: estimate, millimetersPerPoint: millimetersPerPoint, now: now) {
             poster.move(to: target)
+        }
+        if let landing = policy.landing, policy.epoch != snapEpoch, isSnappingOn {
+            snapEpoch = policy.epoch
+            snap(at: landing, millimetersPerPoint: millimetersPerPoint)
+        }
+    }
+
+    /// Moves the cursor to the clickable element nearest to a landing point, unless anything changed meanwhile.
+    private func snap(at landing: CGPoint, millimetersPerPoint: Double) {
+        guard ElementSnapper.isTrusted else {
+            if !askedForAccessibility {
+                askedForAccessibility = true
+                log.info("Snapping needs Accessibility; asking.")
+                ElementSnapper.requestTrust()
+            }
+            return
+        }
+        let radiusMillimeters = tan(Self.snapRadiusDegrees * .pi / 180) * GazeEstimator.viewingDistance
+        let radius = CGFloat(radiusMillimeters / max(millimetersPerPoint, 0.01))
+        let epoch = policy.epoch
+        snapper.snapPoint(near: landing, radius: radius) { [weak self] target in
+            guard let self, let target, self.isEnabled, self.seizer.isEngaged, self.policy.epoch == epoch else {
+                return
+            }
+            self.poster.move(to: target)
         }
     }
 

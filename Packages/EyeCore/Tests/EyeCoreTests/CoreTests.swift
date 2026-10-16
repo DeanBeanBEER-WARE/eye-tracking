@@ -13,6 +13,7 @@ struct CoreTests {
                 .item(MenuItem(.version("0.1.0"))),
                 .separator,
                 .item(MenuItem(.gazeControl)),
+                .item(MenuItem(.snapping, command: .toggleSnapping)),
                 .item(MenuItem(.calibrate, command: .calibrate)),
                 .item(MenuItem(.gazeDot)),
                 .separator,
@@ -29,22 +30,23 @@ struct CoreTests {
     func menuCalibration() {
         let ready = MenuModel.build(state: MenuState(version: "0.3.0", hasCalibration: true, isGazeDotVisible: true))
         #expect(ready[2] == .item(MenuItem(.gazeControl, command: .toggleGazeControl)))
-        #expect(ready[4] == .item(MenuItem(.gazeDot, command: .toggleGazeDot, isChecked: true)))
+        #expect(ready[5] == .item(MenuItem(.gazeDot, command: .toggleGazeDot, isChecked: true)))
         let running = MenuModel.build(state: MenuState(version: "0.3.0", hasCalibration: true, isCalibrating: true))
         #expect(running[2] == .item(MenuItem(.gazeControl)))
-        #expect(running[3] == .item(MenuItem(.calibrating)))
-        #expect(running[4] == .item(MenuItem(.gazeDot)))
+        #expect(running[4] == .item(MenuItem(.calibrating)))
+        #expect(running[5] == .item(MenuItem(.gazeDot)))
         // Gaze control that is on can always be switched off.
-        let on = MenuModel.build(state: MenuState(version: "0.4.0", isGazeControlOn: true))
+        let on = MenuModel.build(state: MenuState(version: "0.4.0", isGazeControlOn: true, isSnappingOn: true))
         #expect(on[2] == .item(MenuItem(.gazeControl, command: .toggleGazeControl, isChecked: true)))
+        #expect(on[3] == .item(MenuItem(.snapping, command: .toggleSnapping, isChecked: true)))
     }
 
     @Test("A found update adds the install entry; a running check disables the check entry")
     func menuUpdate() {
         let nodes = MenuModel.build(
             state: MenuState(version: "0.1.0", availableUpdate: "0.1.1", isCheckingForUpdates: true))
-        #expect(nodes[8] == .item(MenuItem(.installUpdate("0.1.1"), command: .installUpdate)))
-        #expect(nodes[9] == .item(MenuItem(.checkingForUpdates)))
+        #expect(nodes[9] == .item(MenuItem(.installUpdate("0.1.1"), command: .installUpdate)))
+        #expect(nodes[10] == .item(MenuItem(.checkingForUpdates)))
     }
 
     @Test("Cameras form a submenu with the selected one checked; the open preview is checked")
@@ -56,9 +58,9 @@ struct CoreTests {
                 CameraChoice(id: "b", name: "iPhone", isSelected: false),
             ])
         let nodes = MenuModel.build(state: state)
-        #expect(nodes[6] == .item(MenuItem(.preview, command: .togglePreview, isChecked: true)))
+        #expect(nodes[7] == .item(MenuItem(.preview, command: .togglePreview, isChecked: true)))
         #expect(
-            nodes[7]
+            nodes[8]
                 == .submenu(
                     .camera,
                     [

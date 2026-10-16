@@ -59,6 +59,14 @@ final class TrackingController {
         }
     }
 
+    /// Called after the user switched to another camera.
+    var onCameraChanged: (() -> Void)?
+
+    /// The identifier of the camera tracking uses.
+    var activeCameraID: String {
+        cameraChoices.first { $0.isSelected }?.id ?? ""
+    }
+
     /// The cameras for the camera submenu, with the tracking camera selected.
     var cameraChoices: [CameraChoice] {
         let devices = CameraCapture.devices()
@@ -101,6 +109,7 @@ final class TrackingController {
         } catch {
             log.error("Could not save the camera: \(error)")
         }
+        onCameraChanged?()
         guard isRunning else {
             return
         }

@@ -6,8 +6,8 @@ public struct EyeMeasurement: Equatable, Sendable {
     /// The iris offset along the eye axis, in eye widths; positive towards the right side of the image.
     public var horizontal: Double
 
-    /// The iris offset across the eye axis from the lid midpoint, in eye widths; positive towards the bottom
-    /// of the image.
+    /// The iris offset across the eye axis from the midpoint of the eye corners, in eye widths; positive towards
+    /// the bottom of the image. The corners stay put when the eye looks up or down, unlike the lids.
     public var vertical: Double
 
     /// The lid opening in eye widths.
@@ -34,7 +34,10 @@ public struct EyeMeasurement: Equatable, Sendable {
 /// The gaze-relevant measurements of one camera frame.
 public struct GazeFeatures: Equatable, Sendable {
     /// The number of values in ``vector``.
-    public static let vectorLength = 11
+    public static let vectorLength = 14
+
+    /// The version of ``vector``; a gaze model fitted on another version cannot be used.
+    public static let vectorVersion = 2
 
     /// The eye that appears on the left side of the camera image (the subject's right eye).
     public var imageLeftEye: EyeMeasurement
@@ -51,7 +54,8 @@ public struct GazeFeatures: Equatable, Sendable {
     /// The vertical gaze from the blendshapes, positive upwards.
     public var blendshapeVertical: Double
 
-    /// The larger of the two blink scores.
+    /// The smaller of the two blink scores: both eyes must close for a blink, because the eye turned away from
+    /// the camera often looks closed.
     public var blink: Double
 
     /// The capture time in seconds.
@@ -65,7 +69,7 @@ public struct GazeFeatures: Equatable, Sendable {
     ///   - pose: The head pose.
     ///   - blendshapeHorizontal: The horizontal blendshape gaze.
     ///   - blendshapeVertical: The vertical blendshape gaze.
-    ///   - blink: The larger blink score.
+    ///   - blink: The smaller blink score.
     ///   - timestamp: The capture time in seconds.
     public init(
         imageLeftEye: EyeMeasurement,
@@ -114,14 +118,14 @@ public struct GazeFeatures: Equatable, Sendable {
         )
     }
 
-    /// The values the gaze model is fitted on, in a fixed order: iris x and y, blendshape x and y, yaw, pitch,
-    /// roll in degrees, head position x, y, z in centimeters, mean lid opening.
+    /// The values the gaze model is fitted on, in a fixed order: iris x of the image-left and image-right eye,
+    /// iris y of both, blendshape x and y, yaw, pitch, roll in degrees, head position x, y, z in centimeters, lid
+    /// opening of both eyes. The eyes stay separate, so the model can rely on the one that faces the camera.
     public var vector: [Double] {
-        let iris = iris
-        return [
-            iris.x, iris.y, blendshapeHorizontal, blendshapeVertical, pose.yaw, pose.pitch, pose.roll,
-            pose.position.x, pose.position.y, pose.position.z,
-            (imageLeftEye.openness + imageRightEye.openness) / 2,
+        [
+            imageLeftEye.horizontal, imageRightEye.horizontal, imageLeftEye.vertical, imageRightEye.vertical,
+            blendshapeHorizontal, blendshapeVertical, pose.yaw, pose.pitch, pose.roll,
+            pose.position.x, pose.position.y, pose.position.z, imageLeftEye.openness, imageRightEye.openness,
         ]
     }
 }
@@ -168,9 +172,44 @@ public enum FeatureExtractor {
             pose: HeadPose(matrix: transform),
             blendshapeHorizontal: horizontal,
             blendshapeVertical: vertical,
-            blink: max(shape("eyeBlinkLeft"), shape("eyeBlinkRight")),
+            blink: min(shape("eyeBlinkLeft"), shape("eyeBlinkRight")),
             timestamp: observation.timestamp
         )
+    }
+
+    /// The landmarks recorded with each calibration sample: corners, lids, iris center and iris ring of both eyes.
+    public static let recordedLandmarks = [
+        33, 133, 159, 145, 468, 469, 470, 471, 472, 362, 263, 386, 374, 473, 474, 475, 476, 477,
+    ]
+
+    /// The blendshapes recorded with each calibration sample.
+    public static let recordedBlendshapes = [
+        "eyeLookInLeft", "eyeLookOutLeft", "eyeLookUpLeft", "eyeLookDownLeft", "eyeLookInRight", "eyeLookOutRight",
+        "eyeLookUpRight", "eyeLookDownRight", "eyeBlinkLeft", "eyeBlinkRight",
+    ]
+
+    /// The raw measurements of a face for offline analysis of a calibration: the recorded landmarks as x and y in
+    /// pixels and the relative depth z, the transformation matrix column by column (zeros without one), the
+    /// recorded blendshapes.
+    ///
+    /// - Parameter observation: The face.
+    /// - Returns: 18 * 3 + 16 + 10 values, or none for a face without iris landmarks.
+    public static func raw(_ observation: FaceObservation) -> [Float] {
+        guard observation.landmarks.count > 477 else {
+            return []
+        }
+        var values: [Float] = []
+        values.reserveCapacity(recordedLandmarks.count * 3 + 16 + recordedBlendshapes.count)
+        for index in recordedLandmarks {
+            let pixel = observation.pixel(index)
+            values += [pixel.x, pixel.y, observation.landmarks[index].z]
+        }
+        let matrix = observation.transform ?? simd_float4x4()
+        for column in 0..<4 {
+            values += [matrix[column].x, matrix[column].y, matrix[column].z, matrix[column].w]
+        }
+        values += recordedBlendshapes.map { observation.blendshape($0) }
+        return values
     }
 
     static func measure(_ observation: FaceObservation, _ eye: EyeIndices) -> EyeMeasurement? {
@@ -187,10 +226,9 @@ public enum FeatureExtractor {
         let lower = SIMD2<Double>(observation.pixel(eye.lowerLid))
         let iris = SIMD2<Double>(observation.pixel(eye.iris))
         let center = (left + right) / 2
-        let lidMid = (upper + lower) / 2
         return EyeMeasurement(
             horizontal: simd_dot(iris - center, along) / width,
-            vertical: simd_dot(iris - lidMid, across) / width,
+            vertical: simd_dot(iris - center, across) / width,
             openness: simd_length(upper - lower) / width,
             width: width
         )

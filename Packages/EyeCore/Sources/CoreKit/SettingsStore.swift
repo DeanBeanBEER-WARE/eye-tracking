@@ -14,16 +14,23 @@ public struct Settings: Codable, Equatable, Sendable {
     /// Whether gaze control was on when the app last ran; it is switched on again at launch.
     public var gazeControl: Bool
 
+    /// Whether the cursor snaps to clickable elements after the gaze landed.
+    public var snapping: Bool
+
     /// Creates settings.
     ///
     /// - Parameters:
     ///   - notifiedUpdate: The display version of the last announced release.
     ///   - cameraID: The identifier of the tracking camera, empty for the built-in camera.
     ///   - gazeControl: Whether gaze control is on.
-    public init(notifiedUpdate: String = "", cameraID: String = "", gazeControl: Bool = false) {
+    ///   - snapping: Whether the cursor snaps to clickable elements.
+    public init(
+        notifiedUpdate: String = "", cameraID: String = "", gazeControl: Bool = false, snapping: Bool = true
+    ) {
         self.notifiedUpdate = notifiedUpdate
         self.cameraID = cameraID
         self.gazeControl = gazeControl
+        self.snapping = snapping
     }
 
     /// Decodes settings, using the default for every missing key.
@@ -35,12 +42,14 @@ public struct Settings: Codable, Equatable, Sendable {
         notifiedUpdate = try container.decodeIfPresent(String.self, forKey: .notifiedUpdate) ?? ""
         cameraID = try container.decodeIfPresent(String.self, forKey: .cameraID) ?? ""
         gazeControl = try container.decodeIfPresent(Bool.self, forKey: .gazeControl) ?? false
+        snapping = try container.decodeIfPresent(Bool.self, forKey: .snapping) ?? true
     }
 
     private enum CodingKeys: String, CodingKey {
         case notifiedUpdate = "notified_update"
         case cameraID = "camera_id"
         case gazeControl = "gaze_control"
+        case snapping
     }
 }
 

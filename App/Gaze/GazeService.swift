@@ -32,11 +32,12 @@ final class GazeService {
     private let log = Log("Gaze")
     private var saved: GazeModel?
     private var layoutSignature = DisplayLayoutReader.current().signature
+    private var cameraID = ""
     private var estimator: GazeEstimator?
     private var listeners: [Listener: (GazeUpdate) -> Void] = [:]
     private var screenObserver: NSObjectProtocol?
 
-    /// Called when the displays change, after the model was checked against them.
+    /// Called when the displays or the camera change, after the model was checked against them.
     var onDisplaysChanged: (() -> Void)?
 
     /// Loads the saved calibration.
@@ -44,12 +45,13 @@ final class GazeService {
     /// - Parameter tracking: Delivers the tracking results.
     init(tracking: TrackingController) {
         self.tracking = tracking
+        cameraID = tracking.activeCameraID
         saved = store.load()
         if let saved {
             log.info(
                 "Calibration from \(saved.createdAt) loaded; "
-                    + (saved.layout.signature == layoutSignature ? "it matches the displays." : "the displays changed.")
-            )
+                    + (saved.layout.signature == layoutSignature ? "it matches the displays" : "the displays changed")
+                    + (saved.isCurrent ? "." : ", but it uses an older feature version."))
         }
         screenObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
@@ -60,12 +62,27 @@ final class GazeService {
         }
     }
 
-    /// The model, if one is calibrated for the current display arrangement.
+    /// The model, if one is calibrated for the current display arrangement and feature version.
     var model: GazeModel? {
-        guard let saved, saved.layout.signature == layoutSignature else {
+        guard let saved, saved.isCurrent, saved.layout.signature == layoutSignature,
+            saved.data.cameraID == nil || saved.data.cameraID == cameraID
+        else {
             return nil
         }
         return saved
+    }
+
+    /// Follows a switch to another camera; a calibration belongs to the camera it was recorded with.
+    func cameraChanged() {
+        cameraID = tracking.activeCameraID
+        log.info("Camera changed; calibration \(model == nil ? "does not match" : "matches").")
+        estimator = model.map(GazeEstimator.init(model:))
+        onDisplaysChanged?()
+    }
+
+    /// Whether the saved calibration was made with an older feature version and must be repeated.
+    var needsRecalibration: Bool {
+        saved.map { !$0.isCurrent } ?? false
     }
 
     /// Saves a new model and uses it from now on.
@@ -76,6 +93,7 @@ final class GazeService {
         try store.save(model)
         saved = model
         layoutSignature = DisplayLayoutReader.current().signature
+        cameraID = tracking.activeCameraID
         estimator = self.model.map(GazeEstimator.init(model:))
         log.info("Calibration saved (lambda \(model.lambda), \(model.data.samples.count) samples).")
     }
