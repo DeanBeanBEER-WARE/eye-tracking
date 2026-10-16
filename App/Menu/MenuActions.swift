@@ -5,12 +5,19 @@ import CoreKit
 @MainActor
 final class MenuActions: NSObject {
     private let updater: Updater
+    private let tracking: TrackingController
+    private let preview: PreviewWindowController
 
     /// Creates the actions.
     ///
-    /// - Parameter updater: Checks for and installs releases.
-    init(updater: Updater) {
+    /// - Parameters:
+    ///   - updater: Checks for and installs releases.
+    ///   - tracking: Runs the camera and lists the cameras.
+    ///   - preview: The camera preview window.
+    init(updater: Updater, tracking: TrackingController, preview: PreviewWindowController) {
         self.updater = updater
+        self.tracking = tracking
+        self.preview = preview
     }
 
     /// The current state of the status menu.
@@ -20,7 +27,9 @@ final class MenuActions: NSObject {
         MenuState(
             version: AppVersion.current,
             availableUpdate: updater.availableUpdate,
-            isCheckingForUpdates: updater.isChecking
+            isCheckingForUpdates: updater.isChecking,
+            isPreviewVisible: preview.isVisible,
+            cameras: tracking.cameraChoices
         )
     }
 
@@ -32,6 +41,10 @@ final class MenuActions: NSObject {
             return
         }
         switch box.command {
+        case .togglePreview:
+            preview.toggle()
+        case .selectCamera(let id):
+            tracking.selectCamera(id)
         case .checkForUpdates:
             updater.checkManually()
         case .installUpdate:

@@ -1,5 +1,11 @@
 /// A command of the status menu.
 public enum MenuCommand: Equatable, Sendable {
+    /// Shows or hides the camera preview window.
+    case togglePreview
+
+    /// Switches tracking to another camera.
+    case selectCamera(String)
+
     /// Checks GitHub for a newer release and reports the outcome.
     case checkForUpdates
 
@@ -17,6 +23,15 @@ public enum MenuCommand: Equatable, Sendable {
 public enum MenuLabel: Equatable, Sendable {
     /// The app name with the installed version.
     case version(String)
+
+    /// "Camera preview".
+    case preview
+
+    /// "Camera", the title of the camera submenu.
+    case camera
+
+    /// The name of a camera.
+    case cameraDevice(String)
 
     /// "Check for updates".
     case checkForUpdates
@@ -45,26 +60,60 @@ public struct MenuItem: Equatable, Sendable {
     /// The key equivalent shown next to the entry, empty for none.
     public var keyEquivalent: String
 
+    /// Whether the entry shows a check mark.
+    public var isChecked: Bool
+
     /// Creates an entry.
     ///
     /// - Parameters:
     ///   - label: The text of the entry.
     ///   - command: The command, or `nil` for a disabled entry.
     ///   - keyEquivalent: The key equivalent, empty for none.
-    public init(_ label: MenuLabel, command: MenuCommand? = nil, keyEquivalent: String = "") {
+    ///   - isChecked: Whether the entry shows a check mark.
+    public init(
+        _ label: MenuLabel, command: MenuCommand? = nil, keyEquivalent: String = "", isChecked: Bool = false
+    ) {
         self.label = label
         self.command = command
         self.keyEquivalent = keyEquivalent
+        self.isChecked = isChecked
     }
 }
 
 /// A node of the status menu.
-public enum MenuNode: Equatable, Sendable {
+public indirect enum MenuNode: Equatable, Sendable {
     /// An entry.
     case item(MenuItem)
 
+    /// A submenu with its title and entries.
+    case submenu(MenuLabel, [MenuNode])
+
     /// A separator line.
     case separator
+}
+
+/// A camera as offered in the camera submenu.
+public struct CameraChoice: Equatable, Sendable {
+    /// The camera identifier.
+    public var id: String
+
+    /// The camera name.
+    public var name: String
+
+    /// Whether tracking uses this camera.
+    public var isSelected: Bool
+
+    /// Creates a choice.
+    ///
+    /// - Parameters:
+    ///   - id: The camera identifier.
+    ///   - name: The camera name.
+    ///   - isSelected: Whether tracking uses this camera.
+    public init(id: String, name: String, isSelected: Bool) {
+        self.id = id
+        self.name = name
+        self.isSelected = isSelected
+    }
 }
 
 /// What the status menu shows.
@@ -78,16 +127,32 @@ public struct MenuState: Equatable, Sendable {
     /// Whether an update check is running.
     public var isCheckingForUpdates: Bool
 
+    /// Whether the camera preview window is open.
+    public var isPreviewVisible: Bool
+
+    /// The available cameras.
+    public var cameras: [CameraChoice]
+
     /// Creates a state.
     ///
     /// - Parameters:
     ///   - version: The installed version.
     ///   - availableUpdate: The display version of a newer release, if any.
     ///   - isCheckingForUpdates: Whether an update check is running.
-    public init(version: String, availableUpdate: String? = nil, isCheckingForUpdates: Bool = false) {
+    ///   - isPreviewVisible: Whether the camera preview window is open.
+    ///   - cameras: The available cameras.
+    public init(
+        version: String,
+        availableUpdate: String? = nil,
+        isCheckingForUpdates: Bool = false,
+        isPreviewVisible: Bool = false,
+        cameras: [CameraChoice] = []
+    ) {
         self.version = version
         self.availableUpdate = availableUpdate
         self.isCheckingForUpdates = isCheckingForUpdates
+        self.isPreviewVisible = isPreviewVisible
+        self.cameras = cameras
     }
 }
 
@@ -99,6 +164,16 @@ public enum MenuModel {
     /// - Returns: The nodes of the status menu.
     public static func build(state: MenuState) -> [MenuNode] {
         var nodes: [MenuNode] = [.item(MenuItem(.version(state.version))), .separator]
+        nodes.append(.item(MenuItem(.preview, command: .togglePreview, isChecked: state.isPreviewVisible)))
+        if !state.cameras.isEmpty {
+            let cameras = state.cameras.map { camera in
+                MenuNode.item(
+                    MenuItem(
+                        .cameraDevice(camera.name), command: .selectCamera(camera.id), isChecked: camera.isSelected))
+            }
+            nodes.append(.submenu(.camera, cameras))
+        }
+        nodes.append(.separator)
         if let update = state.availableUpdate {
             nodes.append(.item(MenuItem(.installUpdate(update), command: .installUpdate)))
         }

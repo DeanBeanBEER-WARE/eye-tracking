@@ -8,11 +8,17 @@ public struct Settings: Codable, Equatable, Sendable {
     /// The display version of the last release an update notification was posted for, empty if none.
     public var notifiedUpdate: String
 
+    /// The unique identifier of the tracking camera, empty for the built-in camera.
+    public var cameraID: String
+
     /// Creates settings.
     ///
-    /// - Parameter notifiedUpdate: The display version of the last announced release.
-    public init(notifiedUpdate: String = "") {
+    /// - Parameters:
+    ///   - notifiedUpdate: The display version of the last announced release.
+    ///   - cameraID: The identifier of the tracking camera, empty for the built-in camera.
+    public init(notifiedUpdate: String = "", cameraID: String = "") {
         self.notifiedUpdate = notifiedUpdate
+        self.cameraID = cameraID
     }
 
     /// Decodes settings, using the default for every missing key.
@@ -22,10 +28,12 @@ public struct Settings: Codable, Equatable, Sendable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         notifiedUpdate = try container.decodeIfPresent(String.self, forKey: .notifiedUpdate) ?? ""
+        cameraID = try container.decodeIfPresent(String.self, forKey: .cameraID) ?? ""
     }
 
     private enum CodingKeys: String, CodingKey {
         case notifiedUpdate = "notified_update"
+        case cameraID = "camera_id"
     }
 }
 

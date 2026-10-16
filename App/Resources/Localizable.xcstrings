@@ -33,6 +33,18 @@
       "extractionState" : "manual",
       "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Widerrufen" } } }
     },
+    "camera.denied.message" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Erlaube den Kamerazugriff unter Systemeinstellungen > Datenschutz & Sicherheit > Kamera und versuche es erneut." } } }
+    },
+    "camera.denied.title" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Kamerazugriff" } } }
+    },
+    "menu.camera" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kamera" } } }
+    },
     "menu.check_updates" : {
       "extractionState" : "manual",
       "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach Updates suchen…" } } }
@@ -45,6 +57,10 @@
       "extractionState" : "manual",
       "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update auf Version %@ installieren…" } } }
     },
+    "menu.preview" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kamera-Vorschau" } } }
+    },
     "menu.quit" : {
       "extractionState" : "manual",
       "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Beenden" } } }
@@ -56,6 +72,34 @@
     "menu.version %@ %@" : {
       "extractionState" : "manual",
       "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ %2$@" } } }
+    },
+    "preview.face" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Gesicht erkannt" } } }
+    },
+    "preview.no_face" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Gesicht" } } }
+    },
+    "preview.pose %lld %lld %lld" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Drehung %1$lld°  Neigung %2$lld°  Kippung %3$lld°" } } }
+    },
+    "preview.starting" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kamera startet…" } } }
+    },
+    "preview.stats %lld %lld" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld fps  %2$lld ms" } } }
+    },
+    "preview.title" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kamera-Vorschau" } } }
+    },
+    "tracking.failed.title" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Tracking konnte nicht starten" } } }
     },
     "update.available.message %@ %@" : {
       "extractionState" : "manual",

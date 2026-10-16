@@ -30,6 +30,7 @@ rm -rf "$DIST_DIR" "$BUILD_DIR"
 mkdir -p "$DIST_DIR"
 
 cd "$PROJECT_DIR"
+"$SCRIPT_DIR/fetch_mediapipe.sh"
 xcodegen generate --quiet
 
 CERT_HASH="$(security find-identity -v -p codesigning 2>/dev/null \
@@ -64,6 +65,13 @@ fi
 APP_PATH="$DIST_DIR/$APP_NAME.app"
 ditto "$BUILT_APP" "$APP_PATH"
 echo "Architectures: $(lipo -archs "$APP_PATH/Contents/MacOS/$APP_NAME")"
+
+MEDIAPIPE="$APP_PATH/Contents/Frameworks/libmediapipe.dylib"
+if [ ! -f "$MEDIAPIPE" ] || [ ! -f "$APP_PATH/Contents/Resources/face_landmarker.task" ]; then
+    echo "ERROR: MediaPipe library or model missing in the app bundle"
+    exit 1
+fi
+codesign --force --options runtime --timestamp=none --sign "$SIGN_ARG" "$MEDIAPIPE"
 
 codesign --force --options runtime --timestamp=none \
     --entitlements "$ENTITLEMENTS" \

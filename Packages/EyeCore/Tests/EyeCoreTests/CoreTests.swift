@@ -5,12 +5,14 @@ import Testing
 
 @Suite("Core")
 struct CoreTests {
-    @Test("The menu shows version, update check, log and quit")
+    @Test("The menu shows version, preview, update check, log and quit")
     func menuDefault() {
         let nodes = MenuModel.build(state: MenuState(version: "0.1.0"))
         #expect(
             nodes == [
                 .item(MenuItem(.version("0.1.0"))),
+                .separator,
+                .item(MenuItem(.preview, command: .togglePreview)),
                 .separator,
                 .item(MenuItem(.checkForUpdates, command: .checkForUpdates)),
                 .separator,
@@ -23,8 +25,28 @@ struct CoreTests {
     func menuUpdate() {
         let nodes = MenuModel.build(
             state: MenuState(version: "0.1.0", availableUpdate: "0.1.1", isCheckingForUpdates: true))
-        #expect(nodes[2] == .item(MenuItem(.installUpdate("0.1.1"), command: .installUpdate)))
-        #expect(nodes[3] == .item(MenuItem(.checkingForUpdates)))
+        #expect(nodes[4] == .item(MenuItem(.installUpdate("0.1.1"), command: .installUpdate)))
+        #expect(nodes[5] == .item(MenuItem(.checkingForUpdates)))
+    }
+
+    @Test("Cameras form a submenu with the selected one checked; the open preview is checked")
+    func menuCameras() {
+        let state = MenuState(
+            version: "0.2.0", isPreviewVisible: true,
+            cameras: [
+                CameraChoice(id: "a", name: "FaceTime", isSelected: true),
+                CameraChoice(id: "b", name: "iPhone", isSelected: false),
+            ])
+        let nodes = MenuModel.build(state: state)
+        #expect(nodes[2] == .item(MenuItem(.preview, command: .togglePreview, isChecked: true)))
+        #expect(
+            nodes[3]
+                == .submenu(
+                    .camera,
+                    [
+                        .item(MenuItem(.cameraDevice("FaceTime"), command: .selectCamera("a"), isChecked: true)),
+                        .item(MenuItem(.cameraDevice("iPhone"), command: .selectCamera("b"))),
+                    ]))
     }
 
     @Test("Settings round-trip and tolerate missing or broken files")

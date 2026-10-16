@@ -7,6 +7,7 @@ import CoreKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let log = Log("App")
     private var updater: Updater?
+    private var tracking: TrackingController?
     private var menuActions: MenuActions?
     private var statusItemController: StatusItemController?
 
@@ -25,10 +26,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         log.info("\(AppInfo.displayName) \(AppVersion.current) started (log: \(logFile.fileURL.path)).")
         NSApp.mainMenu = MainMenu.make()
         let notifier = Notifier()
-        let updater = Updater(settings: SettingsStore(), notifier: notifier)
-        let menuActions = MenuActions(updater: updater)
+        let settings = SettingsStore()
+        let updater = Updater(settings: settings, notifier: notifier)
+        let tracking = TrackingController(settings: settings)
+        let preview = PreviewWindowController(tracking: tracking)
+        let menuActions = MenuActions(updater: updater, tracking: tracking, preview: preview)
         let statusItemController = StatusItemController(actions: menuActions)
         self.updater = updater
+        self.tracking = tracking
         self.menuActions = menuActions
         self.statusItemController = statusItemController
         updater.start()

@@ -29,6 +29,11 @@ public struct Paths: Sendable {
         supportDirectory.appendingPathComponent("settings.json")
     }
 
+    /// An empty CA bundle handed to MediaPipe so its usage logging cannot upload anything.
+    public var emptyCABundle: URL {
+        supportDirectory.appendingPathComponent("mediapipe-no-upload.pem")
+    }
+
     /// The log directory.
     public var logDirectory: URL {
         home.appendingPathComponent("Library", isDirectory: true)

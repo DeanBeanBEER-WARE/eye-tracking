@@ -28,6 +28,9 @@ targets:
     platform: macOS
     sources:
       - path: App
+      # Fetched by scripts/fetch_mediapipe.sh (gitignored).
+      - path: Vendor/mediapipe/face_landmarker.task
+        buildPhase: resources
     settings:
       base:
         PRODUCT_NAME: EyeTracking
@@ -48,6 +51,13 @@ targets:
         product: UpdateKit
       - package: EyeCore
         product: AppSupportKit
+      - package: EyeCore
+        product: TrackingKit
+      # Loaded at runtime with dlopen by the CMediaPipe shim, so it is embedded but not linked.
+      - framework: Vendor/mediapipe/libmediapipe.dylib
+        embed: true
+        link: false
+        codeSign: true
 schemes:
   EyeTracking:
     build:

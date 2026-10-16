@@ -41,12 +41,28 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     /// - Parameter menu: The menu that is about to open.
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        for node in MenuModel.build(state: actions.state()) {
+        for item in items(MenuModel.build(state: actions.state())) {
+            menu.addItem(item)
+        }
+    }
+
+    private func items(_ nodes: [MenuNode]) -> [NSMenuItem] {
+        nodes.map { node in
             switch node {
             case .separator:
-                menu.addItem(.separator())
+                return .separator()
             case .item(let entry):
-                menu.addItem(item(entry))
+                return item(entry)
+            case .submenu(let label, let children):
+                let title = MenuStrings.text(label)
+                let submenu = NSMenu(title: title)
+                submenu.autoenablesItems = false
+                for child in items(children) {
+                    submenu.addItem(child)
+                }
+                let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+                item.submenu = submenu
+                return item
             }
         }
     }
@@ -54,6 +70,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private func item(_ entry: MenuItem) -> NSMenuItem {
         let item = NSMenuItem(
             title: MenuStrings.text(entry.label), action: nil, keyEquivalent: entry.keyEquivalent)
+        item.state = entry.isChecked ? .on : .off
         if let command = entry.command {
             item.action = #selector(MenuActions.performCommand(_:))
             item.target = actions

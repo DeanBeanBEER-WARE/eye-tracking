@@ -7,7 +7,7 @@ PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$PROJECT_DIR"
 
 SOURCES="Packages/EyeCore/Sources"
-MODULES="CoreKit UpdateKit AppSupportKit"
+MODULES="CoreKit UpdateKit AppSupportKit TrackingKit"
 violations=0
 
 # Lists the files below the given paths that import the module and marks the run as failed.
