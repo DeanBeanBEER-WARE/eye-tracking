@@ -1,0 +1,146 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "alert.ok" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "OK" } } }
+    },
+    "edit.copy" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kopieren" } } }
+    },
+    "edit.cut" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Ausschneiden" } } }
+    },
+    "edit.menu" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Bearbeiten" } } }
+    },
+    "edit.paste" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Einsetzen" } } }
+    },
+    "edit.redo" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Wiederholen" } } }
+    },
+    "edit.select_all" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles auswählen" } } }
+    },
+    "edit.undo" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Widerrufen" } } }
+    },
+    "menu.check_updates" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach Updates suchen…" } } }
+    },
+    "menu.checking_updates" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Suche nach Updates…" } } }
+    },
+    "menu.install_update %@" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update auf Version %@ installieren…" } } }
+    },
+    "menu.quit" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Beenden" } } }
+    },
+    "menu.version %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ %2$@" } } }
+    },
+    "update.available.message %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Version %1$@ ist verfügbar (installiert: %2$@)." } } }
+    },
+    "update.available.notification %@" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Version %@ ist verfügbar. Installieren über das Menü." } } }
+    },
+    "update.available.title" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update verfügbar" } } }
+    },
+    "update.button.close" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Schließen" } } }
+    },
+    "update.button.later" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Später" } } }
+    },
+    "update.button.open_release" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Release öffnen" } } }
+    },
+    "update.button.update" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Installieren" } } }
+    },
+    "update.check_failed.title" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update-Prüfung nicht möglich" } } }
+    },
+    "update.current.message %@" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Version %@ ist aktuell." } } }
+    },
+    "update.current.title" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Update" } } }
+    },
+    "update.download.message %@" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Version %@ wird heruntergeladen…" } } }
+    },
+    "update.download.title" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update" } } }
+    },
+    "update.error.copy" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die neue Version konnte nicht kopiert werden." } } }
+    },
+    "update.error.download" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die DMG des Releases konnte nicht heruntergeladen werden. Ist die GitHub CLI mit DeanBeanBEER-WARE angemeldet?" } } }
+    },
+    "update.error.invalid_bundle" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die DMG enthält keine gültige Eye Tracking App." } } }
+    },
+    "update.error.launch" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Installation konnte nicht gestartet werden." } } }
+    },
+    "update.error.mount" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die DMG konnte nicht geöffnet werden." } } }
+    },
+    "update.error.no_app" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die DMG enthält keine App." } } }
+    },
+    "update.error.signature" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die heruntergeladene App ist nicht mit dem erwarteten Zertifikat signiert." } } }
+    },
+    "update.failed.title" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Update fehlgeschlagen" } } }
+    },
+    "update.unavailable.message" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Release-Informationen sind nicht erreichbar (privates Repository ohne angemeldete GitHub CLI)." } } }
+    },
+    "update.unknown_error" : {
+      "extractionState" : "manual",
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Unbekannter Fehler." } } }
+    }
+  },
+  "version" : "1.0"
+}
