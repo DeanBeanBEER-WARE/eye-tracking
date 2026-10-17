@@ -3,18 +3,13 @@ import AppSupportKit
 import CoreKit
 import TrackingKit
 
-/// Owns the tracking engine and runs the camera only while at least one consumer needs it.
 @MainActor
 final class TrackingController {
-    /// A part of the app that needs tracking results.
     enum Consumer: Hashable {
-        /// The camera preview window.
         case preview
 
-        /// The calibration.
         case calibration
 
-        /// The gaze estimation (gaze dot, pointer).
         case gaze
     }
 
@@ -25,12 +20,8 @@ final class TrackingController {
     private var startTask: Task<Void, Never>?
     private var isRunning = false
 
-    /// The tracking pipeline.
     let engine: TrackingEngine
 
-    /// Creates the controller with the MediaPipe files of the app bundle.
-    ///
-    /// - Parameter settings: Provides the selected camera.
     init(settings: SettingsStore) {
         self.settings = settings
         engine = TrackingEngine(resources: Self.resources())
@@ -43,12 +34,6 @@ final class TrackingController {
         }
     }
 
-    /// Sets the receiver of a consumer's tracking results, called on the main thread for every frame
-    /// (`nil` for a frame without a face).
-    ///
-    /// - Parameters:
-    ///   - consumer: The consumer.
-    ///   - handler: The receiver, or `nil` to remove it.
     func setObserver(_ consumer: Consumer, _ handler: ((FaceObservation?) -> Void)?) {
         observers[consumer] = handler
     }
@@ -59,15 +44,12 @@ final class TrackingController {
         }
     }
 
-    /// Called after the user switched to another camera.
     var onCameraChanged: (() -> Void)?
 
-    /// The identifier of the camera tracking uses.
     var activeCameraID: String {
         cameraChoices.first { $0.isSelected }?.id ?? ""
     }
 
-    /// The cameras for the camera submenu, with the tracking camera selected.
     var cameraChoices: [CameraChoice] {
         let devices = CameraCapture.devices()
         let selected = settings.load().cameraID
@@ -75,17 +57,11 @@ final class TrackingController {
         return devices.map { CameraChoice(id: $0.id, name: $0.name, isSelected: $0.id == active) }
     }
 
-    /// Registers a consumer and starts the camera if it is the first one.
-    ///
-    /// - Parameter consumer: The consumer.
     func acquire(_ consumer: Consumer) {
         consumers.insert(consumer)
         startIfNeeded()
     }
 
-    /// Unregisters a consumer and stops the camera if none is left.
-    ///
-    /// - Parameter consumer: The consumer.
     func release(_ consumer: Consumer) {
         consumers.remove(consumer)
         guard consumers.isEmpty else {
@@ -100,9 +76,6 @@ final class TrackingController {
         }
     }
 
-    /// Switches to another camera and restarts tracking if it runs.
-    ///
-    /// - Parameter id: The camera identifier.
     func selectCamera(_ id: String) {
         do {
             try settings.update { $0.cameraID = id }

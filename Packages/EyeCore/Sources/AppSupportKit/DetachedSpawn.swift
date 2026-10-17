@@ -1,16 +1,7 @@
 import CoreKit
 import Foundation
 
-/// Starts a process in its own session so it survives the app quitting.
 public enum DetachedSpawn {
-    /// Spawns a detached process with standard input from `/dev/null` and its output appended to a log.
-    ///
-    /// - Parameters:
-    ///   - executable: The absolute path of the executable.
-    ///   - arguments: The arguments after the executable.
-    ///   - logFile: The file standard output and standard error are appended to.
-    /// - Returns: The process identifier of the child.
-    /// - Throws: `ProcessRunnerError.launchFailed` if the process cannot be started.
     @discardableResult
     public static func spawn(_ executable: String, arguments: [String], logFile: URL) throws -> pid_t {
         try? FileManager.default.createDirectory(

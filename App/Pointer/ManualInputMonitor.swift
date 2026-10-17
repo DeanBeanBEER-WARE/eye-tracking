@@ -2,19 +2,14 @@ import CoreGraphics
 import CoreKit
 import Foundation
 
-/// Watches the pointer events of all devices that are not seized (the trackpad) with a listen-only event tap.
 @MainActor
 final class ManualInputMonitor {
     private let log = Log("Pointer")
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
 
-    /// Called when a device other than the seized mouse moves the cursor or presses a button.
     var onManualInput: (() -> Void)?
 
-    /// Starts watching.
-    ///
-    /// - Returns: Whether the event tap could be created.
     @discardableResult
     func start() -> Bool {
         guard tap == nil else {
@@ -51,7 +46,6 @@ final class ManualInputMonitor {
         return true
     }
 
-    /// Stops watching.
     func stop() {
         if let source {
             CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)

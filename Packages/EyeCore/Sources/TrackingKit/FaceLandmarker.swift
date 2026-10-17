@@ -2,15 +2,11 @@ import CMediaPipe
 import Foundation
 import simd
 
-/// A failure of the MediaPipe face landmarker.
 public enum FaceLandmarkerError: Error, Equatable, Sendable, CustomStringConvertible {
-    /// The library or the model could not be loaded.
     case loadFailed(String)
 
-    /// A frame could not be processed.
     case detectionFailed(String)
 
-    /// A short description for the log.
     public var description: String {
         switch self {
         case .loadFailed(let message): "MediaPipe could not be loaded: \(message)"
@@ -19,22 +15,12 @@ public enum FaceLandmarkerError: Error, Equatable, Sendable, CustomStringConvert
     }
 }
 
-/// The MediaPipe face landmarker in VIDEO mode, with blendshapes and the facial transformation matrix.
-///
-/// Not thread-safe: create and use it on one serial queue.
 public final class FaceLandmarker: @unchecked Sendable {
     private static let errorLength = 512
 
     private let tracker: OpaquePointer
     private var lastTimestamp: Int64 = -1
 
-    /// Loads the library and the model.
-    ///
-    /// - Parameters:
-    ///   - libraryPath: The path of `libmediapipe.dylib`.
-    ///   - modelPath: The path of `face_landmarker.task`.
-    ///   - caBundlePath: The CA bundle for MediaPipe's usage logging; an empty file keeps it from uploading.
-    /// - Throws: ``FaceLandmarkerError/loadFailed(_:)`` if the library or the model cannot be loaded.
     public init(libraryPath: String, modelPath: String, caBundlePath: String) throws(FaceLandmarkerError) {
         var error = [CChar](repeating: 0, count: Self.errorLength)
         guard
@@ -50,16 +36,6 @@ public final class FaceLandmarker: @unchecked Sendable {
         cmp_face_tracker_destroy(tracker)
     }
 
-    /// Detects the face in a tightly packed RGB image.
-    ///
-    /// - Parameters:
-    ///   - rgb: The pixels, three bytes per pixel, rows without padding.
-    ///   - width: The image width in pixels.
-    ///   - height: The image height in pixels.
-    ///   - timestamp: The capture time in seconds; MediaPipe needs increasing timestamps, so equal or older
-    ///     ones are moved forward by one millisecond.
-    /// - Returns: The face, or `nil` if none was found.
-    /// - Throws: ``FaceLandmarkerError/detectionFailed(_:)`` if MediaPipe rejects the frame.
     public func detect(rgb: UnsafePointer<UInt8>, width: Int, height: Int, timestamp: TimeInterval)
         throws(FaceLandmarkerError) -> FaceObservation?
     {
@@ -114,7 +90,6 @@ public final class FaceLandmarker: @unchecked Sendable {
         guard cmp_face_tracker_has_matrix(tracker) == 1, let values = cmp_face_tracker_matrix(tracker) else {
             return nil
         }
-        // MediaPipe copies an Eigen matrix, which is column-major like simd_float4x4.
         return simd_float4x4(
             SIMD4(values[0], values[1], values[2], values[3]),
             SIMD4(values[4], values[5], values[6], values[7]),

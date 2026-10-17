@@ -1,26 +1,20 @@
 import AppKit
 import GazeKit
 
-/// Shows the live gaze point as a dot above all windows, to judge the calibration.
 @MainActor
 final class GazeDotController {
     private let gaze: GazeService
     private var overlay: OverlaySet?
     private var content = OverlayContent()
 
-    /// Whether the dot is shown.
     var isVisible: Bool {
         overlay != nil
     }
 
-    /// Creates the controller.
-    ///
-    /// - Parameter gaze: Delivers the gaze estimates.
     init(gaze: GazeService) {
         self.gaze = gaze
     }
 
-    /// Shows the dot, or hides it if it is shown.
     func toggle() {
         if isVisible {
             hide()
@@ -29,7 +23,6 @@ final class GazeDotController {
         }
     }
 
-    /// Shows the dot if a calibration for the current displays exists.
     func show() {
         guard overlay == nil, gaze.model != nil else {
             return
@@ -43,14 +36,12 @@ final class GazeDotController {
         }
     }
 
-    /// Hides the dot.
     func hide() {
         gaze.unsubscribe(.dot)
         overlay?.close()
         overlay = nil
     }
 
-    /// Rebuilds the windows for new displays, or hides the dot if the calibration no longer fits.
     func displaysChanged() {
         guard isVisible else {
             return

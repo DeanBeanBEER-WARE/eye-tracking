@@ -1,10 +1,4 @@
 #!/bin/bash
-# Builds, signs and packs the app into dist/EyeTracking-<version>.dmg.
-#
-# Usage: scripts/build.sh
-#
-# The app is signed with the stable identity "WhisperApp Dev Signing" (shared with Whisper Assistant), so TCC
-# grants (camera, Accessibility) survive rebuilds and updates. Without it the build falls back to ad-hoc signing.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -73,6 +67,12 @@ if [ ! -f "$MEDIAPIPE" ] || [ ! -f "$APP_PATH/Contents/Resources/face_landmarker
 fi
 codesign --force --options runtime --timestamp=none --sign "$SIGN_ARG" "$MEDIAPIPE"
 
+RESOURCES="$APP_PATH/Contents/Resources"
+cp "$PROJECT_DIR/LICENSE" "$RESOURCES/LICENSE.txt"
+cp "$PROJECT_DIR/THIRD_PARTY_NOTICES.md" "$RESOURCES/THIRD_PARTY_NOTICES.md"
+cp "$PROJECT_DIR/Vendor/mediapipe/LICENSE" "$RESOURCES/MediaPipe-LICENSE.txt"
+cp "$PROJECT_DIR/Vendor/mediapipe/NOTICE" "$RESOURCES/MediaPipe-NOTICE.txt"
+
 codesign --force --options runtime --timestamp=none \
     --entitlements "$ENTITLEMENTS" \
     --sign "$SIGN_ARG" \
@@ -85,6 +85,8 @@ rm -rf "$STAGING"
 mkdir -p "$STAGING"
 ditto "$APP_PATH" "$STAGING/$APP_NAME.app"
 ln -s /Applications "$STAGING/Applications"
+cp "$PROJECT_DIR/LICENSE" "$STAGING/LICENSE.txt"
+cp "$PROJECT_DIR/THIRD_PARTY_NOTICES.md" "$STAGING/THIRD_PARTY_NOTICES.md"
 hdiutil create \
     -volname "$VOLUME_NAME" \
     -srcfolder "$STAGING" \

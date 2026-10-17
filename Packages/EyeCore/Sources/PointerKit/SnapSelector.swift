@@ -1,25 +1,13 @@
 import CoreGraphics
 import Foundation
 
-/// Picks the clickable element the cursor snaps to after the gaze landed.
 public enum SnapSelector {
-    /// Elements larger than this in either dimension (text areas, web views) are not snap targets.
     public static let maximumSize = CGSize(width: 700, height: 160)
 
-    /// The cursor moves to the center of an element it is already inside only if the element is at most this
-    /// large; in larger elements the gaze point is good enough.
     public static let centeringSize = CGSize(width: 240, height: 60)
 
-    /// Two candidates closer than this to the same distance make the choice ambiguous, so nothing snaps.
     public static let ambiguityMargin: CGFloat = 10
 
-    /// Chooses the snap point.
-    ///
-    /// - Parameters:
-    ///   - frames: The frames of the clickable elements near the landing point, in global points.
-    ///   - point: The landing point.
-    ///   - radius: The largest distance from the point to an element.
-    /// - Returns: The center of the chosen element, or `nil` if none qualifies or the choice is ambiguous.
     public static func choose(from frames: [CGRect], near point: CGPoint, radius: CGFloat) -> CGPoint? {
         let candidates =
             frames
@@ -46,7 +34,6 @@ public enum SnapSelector {
         return center
     }
 
-    /// The distance from a point to a rectangle, 0 inside.
     static func distance(from point: CGPoint, to frame: CGRect) -> CGFloat {
         let dx = max(frame.minX - point.x, 0, point.x - frame.maxX)
         let dy = max(frame.minY - point.y, 0, point.y - frame.maxY)
@@ -57,12 +44,6 @@ public enum SnapSelector {
         frame.width * frame.height
     }
 
-    /// The sample points around a landing point for the element search: the point itself and two rings.
-    ///
-    /// - Parameters:
-    ///   - point: The landing point.
-    ///   - radius: The outer ring radius.
-    /// - Returns: The sample points, the landing point first.
     public static func samplePoints(around point: CGPoint, radius: CGFloat) -> [CGPoint] {
         var points = [point]
         for (ring, count) in [(radius * 0.45, 6), (radius, 10)] {

@@ -1,14 +1,7 @@
 import AppKit
 
-/// The application main menu.
-///
-/// A menu bar app never shows it, but AppKit routes key equivalents such as Command-V through it; without an Edit
-/// menu, text fields in alerts cannot paste, copy, cut, select all or undo.
 @MainActor
 enum MainMenu {
-    /// Builds the main menu with the standard Edit commands.
-    ///
-    /// - Returns: The menu to assign to `NSApplication.mainMenu`.
     static func make() -> NSMenu {
         let edit = NSMenu(title: String(localized: "edit.menu"))
         edit.addItem(item("edit.undo", action: Selector(("undo:")), key: "z"))

@@ -1,30 +1,17 @@
 import Foundation
 
-/// Ridge regression with an unpenalized bias, solved through the normal equations and a Cholesky factorization.
-///
-/// The problems here are small (a few hundred rows, a few dozen columns), so a direct solver is exact and fast.
 enum RidgeRegression {
-    /// The sums `XᵀX` and `Xᵀy` (for two targets) of a set of rows; sets combine by addition and subtraction,
-    /// which makes leave-one-group-out cross-validation cheap.
     struct NormalEquations: Equatable, Sendable {
-        /// The number of columns.
         let width: Int
 
-        /// `XᵀX`, row-major, upper triangle filled.
         var gram: [Double]
 
-        /// `Xᵀy` for the first target.
         var firstMoment: [Double]
 
-        /// `Xᵀy` for the second target.
         var secondMoment: [Double]
 
-        /// The number of rows.
         var count: Int
 
-        /// Empty sums.
-        ///
-        /// - Parameter width: The number of columns.
         init(width: Int) {
             self.width = width
             gram = [Double](repeating: 0, count: width * width)
@@ -33,12 +20,6 @@ enum RidgeRegression {
             count = 0
         }
 
-        /// Adds a row with its two targets.
-        ///
-        /// - Parameters:
-        ///   - row: The design row.
-        ///   - first: The first target.
-        ///   - second: The second target.
         mutating func add(_ row: [Double], _ first: Double, _ second: Double) {
             for i in 0..<width {
                 let value = row[i]
@@ -64,10 +45,6 @@ enum RidgeRegression {
             return sum
         }
 
-        /// Solves for the weights of both targets.
-        ///
-        /// - Parameter lambda: The penalty on every weight except the bias (column 0).
-        /// - Returns: The weights of the first and the second target, or `nil` if the system is singular.
         func solve(lambda: Double) -> (first: [Double], second: [Double])? {
             guard count > 0 else {
                 return nil
@@ -90,13 +67,6 @@ enum RidgeRegression {
         }
     }
 
-    /// Fits weights for rows whose first value is the bias term 1.
-    ///
-    /// - Parameters:
-    ///   - rows: The design rows, each starting with 1.
-    ///   - targets: One target per row.
-    ///   - lambda: The penalty on every weight except the bias.
-    /// - Returns: The weights, or `nil` if the system is singular.
     static func fit(rows: [[Double]], targets: [Double], lambda: Double) -> [Double]? {
         guard let width = rows.first?.count, rows.count == targets.count, width > 0 else {
             return nil
@@ -108,23 +78,10 @@ enum RidgeRegression {
         return equations.solve(lambda: lambda)?.first
     }
 
-    /// Applies weights to a design row.
-    ///
-    /// - Parameters:
-    ///   - weights: The weights.
-    ///   - row: The design row, starting with 1.
-    /// - Returns: The prediction.
     static func predict(_ weights: [Double], _ row: [Double]) -> Double {
         zip(weights, row).reduce(0) { $0 + $1.0 * $1.1 }
     }
 
-    /// Solves `A x = b` for a symmetric positive definite matrix stored row-major.
-    ///
-    /// - Parameters:
-    ///   - matrix: The matrix, `size * size` values.
-    ///   - vector: The right-hand side.
-    ///   - size: The dimension.
-    /// - Returns: The solution, or `nil` if the matrix is not positive definite.
     static func solveSymmetricPositiveDefinite(_ matrix: [Double], _ vector: [Double], size: Int) -> [Double]? {
         var lower = [Double](repeating: 0, count: size * size)
         for i in 0..<size {

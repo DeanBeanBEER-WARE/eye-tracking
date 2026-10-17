@@ -4,31 +4,22 @@ import CoreKit
 import GazeKit
 import TrackingKit
 
-/// Runs a calibration: shows the targets one after another on dimmed displays, records gaze features while the user
-/// looks at them, then fits and saves the gaze model and reports its accuracy.
 @MainActor
 final class CalibrationController {
     private enum Stage {
-        /// Shows the instructions until the face is found.
         case intro
 
-        /// The eyes move to the target; no samples yet.
         case settle
 
-        /// Samples are recorded.
         case sample
     }
 
-    /// The seconds the instructions stay at least.
     private static let introTime: TimeInterval = 3
 
-    /// The samples a target needs before the next one appears, by phase.
     private static let minimumSamples: [CalibrationTarget.Phase: Int] = [.grid: 12, .headMovement: 40]
 
-    /// The extra seconds a target waits for missing samples before it is skipped.
     private static let sampleTimeout: TimeInterval = 5
 
-    /// The seconds without a face after which a hint appears.
     private static let noFaceHint: TimeInterval = 0.5
 
     private let tracking: TrackingController
@@ -46,26 +37,17 @@ final class CalibrationController {
     private var lastFace: TimeInterval = 0
     private var previousApp: NSRunningApplication?
 
-    /// Whether a calibration runs, including the model fit.
     private(set) var isRunning = false
 
-    /// Called before a calibration starts, to hide other overlays and pause gaze control.
     var onStart: (() -> Void)?
 
-    /// Called when the recording ended, finished or cancelled.
     var onFinish: (() -> Void)?
 
-    /// Creates the controller.
-    ///
-    /// - Parameters:
-    ///   - tracking: Delivers the tracking results.
-    ///   - gaze: Receives the fitted model.
     init(tracking: TrackingController, gaze: GazeService) {
         self.tracking = tracking
         self.gaze = gaze
     }
 
-    /// Starts a calibration on all current displays.
     func start() {
         guard !isRunning else {
             return
@@ -104,7 +86,6 @@ final class CalibrationController {
         self.timer = timer
     }
 
-    /// Stops the calibration without changing the saved model.
     func cancel() {
         guard overlay != nil else {
             return

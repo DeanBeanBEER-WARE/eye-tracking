@@ -3,7 +3,6 @@ import AppSupportKit
 import CoreKit
 import UpdateKit
 
-/// Checks for new releases at launch, periodically and on request, and installs an update on request.
 @MainActor
 final class Updater {
     private let settings: SettingsStore
@@ -15,19 +14,12 @@ final class Updater {
     private var isInstalling = false
     private var available: UpdateResult?
 
-    /// Whether a check is running.
     private(set) var isChecking = false
 
-    /// The display version of the newer release found by the last check, if any.
     var availableUpdate: String? {
         available?.latest
     }
 
-    /// Creates the updater.
-    ///
-    /// - Parameters:
-    ///   - settings: Stores the last release a notification was posted for.
-    ///   - notifier: Posts the update and download notifications.
     init(settings: SettingsStore, notifier: Notifier) {
         let runner = SystemProcessRunner()
         let auth = GitHubAuth(runner: runner)
@@ -37,7 +29,6 @@ final class Updater {
         installer = UpdateInstaller.system(runner: runner, token: { auth.token() })
     }
 
-    /// Runs the silent check now and then every ``UpdateSchedule/interval``.
     func start() {
         runCheck(manual: false)
         scheduleTask = Task { [weak self] in
@@ -49,18 +40,15 @@ final class Updater {
         }
     }
 
-    /// Stops the periodic check.
     func stop() {
         scheduleTask?.cancel()
         scheduleTask = nil
     }
 
-    /// Checks for updates on request and reports every outcome.
     func checkManually() {
         runCheck(manual: true)
     }
 
-    /// Installs the release found by the last check.
     func installAvailable() {
         guard let available else {
             checkManually()

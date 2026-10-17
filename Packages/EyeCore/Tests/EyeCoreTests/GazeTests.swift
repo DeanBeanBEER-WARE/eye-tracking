@@ -19,7 +19,6 @@ struct GazeTests {
         physicalSize: CGSize(width: 301, height: 195), isBuiltIn: true)
     static let layout = ScreenLayout(displays: [lower, upper, builtIn])
 
-    /// Features whose iris offsets encode the global target point, as an idealized camera would see them.
     static func features(for point: CGPoint, noise: Double = 0, time: TimeInterval = 0) -> GazeFeatures {
         let x = Double(point.x) / 4000 + noise
         let y = Double(point.y) / 3000 - noise
@@ -131,7 +130,6 @@ struct GazeTests {
         func place(_ index: Int, _ x: Float, _ y: Float) {
             landmarks[index] = SIMD3(x / 1000, y / 1000, 0)
         }
-        // Image-left eye from x 300 to 400, iris 10 px right of center; image-right eye from 600 to 700, centered.
         place(33, 300, 500)
         place(133, 400, 500)
         place(159, 350, 485)

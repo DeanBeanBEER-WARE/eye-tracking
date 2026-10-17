@@ -2,7 +2,6 @@ import AppKit
 import AppSupportKit
 import CoreKit
 
-/// Application delegate that owns the services and the menu bar controller for the lifetime of the app.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let log = Log("App")
@@ -13,9 +12,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var calibration: CalibrationController?
     private var statusItemController: StatusItemController?
 
-    /// Starts logging, creates the updater and the status item once the application has finished launching.
-    ///
-    /// - Parameter notification: The launch notification.
     func applicationDidFinishLaunching(_ notification: Notification) {
         let logFile = RotatingLogFile(directory: Paths.standard.logDirectory)
         Log.bootstrap(logFile)
@@ -70,11 +66,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Handles the hotkey URLs that Karabiner opens with `open -g eyetracking://...`.
-    ///
-    /// - Parameters:
-    ///   - application: The application.
-    ///   - urls: The opened URLs.
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
             guard let command = HotkeyCommand(url: url) else {
@@ -95,9 +86,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Gives the mouse back and stops the periodic update check before the app quits.
-    ///
-    /// - Parameter notification: The termination notification.
     func applicationWillTerminate(_ notification: Notification) {
         pointer?.shutDown()
         updater?.stop()
@@ -105,9 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-/// The version of the running app.
 enum AppVersion {
-    /// The marketing version from the Info.plist.
     static var current: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
     }

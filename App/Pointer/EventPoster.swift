@@ -2,42 +2,27 @@ import AppKit
 import CoreGraphics
 import PointerKit
 
-/// Posts the cursor moves of gaze control and the re-injected buttons, wheel and drags of the seized mouse.
-///
-/// Every posted event carries ``tag`` in its source user data, so the event monitor can tell them from the input of
-/// devices that are not seized (the trackpad).
 @MainActor
 final class EventPoster {
-    /// The source user data of all posted events ("EYET").
     nonisolated static let tag: Int64 = 0x4559_4554
 
     private let source = CGEventSource(stateID: .hidSystemState)
     private var clicks = ClickCounter()
     private var pressed: Set<Int> = []
 
-    /// The current cursor position in global points.
     var cursor: CGPoint {
         CGEvent(source: nil)?.location ?? .zero
     }
 
-    /// Whether a re-injected button is held.
     var isButtonHeld: Bool {
         !pressed.isEmpty
     }
 
-    /// Moves the cursor.
-    ///
-    /// - Parameter point: The new position in global points.
     func move(to point: CGPoint) {
         let from = cursor
         post(.mouseMoved, at: point, button: .left, delta: CGPoint(x: point.x - from.x, y: point.y - from.y))
     }
 
-    /// Drags with the held buttons by a relative distance.
-    ///
-    /// - Parameters:
-    ///   - delta: The distance in points.
-    ///   - clamp: Keeps the new position on a display.
     func drag(by delta: CGPoint, clamp: (CGPoint) -> CGPoint) {
         guard let primary = pressed.min() else {
             return
@@ -53,11 +38,6 @@ final class EventPoster {
         post(type, at: to, button: Self.mouseButton(primary), delta: CGPoint(x: to.x - from.x, y: to.y - from.y))
     }
 
-    /// Presses or releases a button at the cursor.
-    ///
-    /// - Parameters:
-    ///   - number: The button number from 1.
-    ///   - isDown: Whether the button goes down.
     func button(_ number: Int, isDown: Bool) {
         let location = cursor
         let count: Int
@@ -67,8 +47,6 @@ final class EventPoster {
                 button: number, at: location, time: ProcessInfo.processInfo.systemUptime,
                 interval: NSEvent.doubleClickInterval)
         } else {
-            // A release without a recorded press is posted too: the system may have seen the press before the
-            // mouse was seized.
             pressed.remove(number)
             count = clicks.releaseCount(button: number)
         }
@@ -93,11 +71,6 @@ final class EventPoster {
         send(event)
     }
 
-    /// Scrolls by wheel and tilt notches.
-    ///
-    /// - Parameters:
-    ///   - wheel: Wheel notches, positive away from the user.
-    ///   - pan: Tilt notches, positive to the right.
     func scroll(wheel: Int, pan: Int) {
         let natural = UserDefaults.standard.object(forKey: "com.apple.swipescrolldirection") as? Bool ?? true
         let lines = ScrollMapping.lines(wheel: wheel, pan: pan, natural: natural)
@@ -111,7 +84,6 @@ final class EventPoster {
         send(event)
     }
 
-    /// Releases every held button, before the mouse is given back to the system.
     func releaseAll() {
         for number in pressed.sorted() {
             button(number, isDown: false)

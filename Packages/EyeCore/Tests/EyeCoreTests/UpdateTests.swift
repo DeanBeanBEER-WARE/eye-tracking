@@ -121,37 +121,48 @@ struct UpdateTests {
         #expect(UpdateScript.text.hasSuffix(#"/usr/bin/open "$target""#))
     }
 
-    @Test("The check sends the token and evaluates the answer")
+    @Test("A release that is not public is fetched again with the token")
     func authenticatedCheck() async throws {
-        let transport = FakeTransport([FakeTransport.json(Self.releaseText)])
+        let transport = FakeTransport([FakeTransport.json("{}", status: 404), FakeTransport.json(Self.releaseText)])
         let result = await makeFetcher(transport, token: "t0k").check(current: "0.1.6")
-        #expect(result.status == .update)
-        let request = try #require(transport.requests.first)
+        #expect(result.status == .update && result.needsAuthentication)
+        #expect(transport.requests.first?.value(forHTTPHeaderField: "Authorization") == nil)
+        let request = try #require(transport.requests.last)
         #expect(request.url?.absoluteString == "https://api.github.com/repos/o/r/releases/latest")
         #expect(request.value(forHTTPHeaderField: "Accept") == "application/vnd.github+json")
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer t0k")
         #expect(request.timeoutInterval == 15)
     }
 
-    @Test("Without a token the request is anonymous")
+    @Test("A public release is fetched anonymously without asking for a token")
     func anonymousCheck() async throws {
         let transport = FakeTransport([FakeTransport.json(Self.releaseText)])
-        let result = await makeFetcher(transport, token: nil).check(current: "0.1.7")
-        #expect(result.status == .current)
+        let asked = Locked(false)
+        let fetcher = ReleaseFetcher(
+            transport: transport,
+            token: {
+                asked.mutate { $0 = true }
+                return "t0k"
+            }, repositorySlug: "o/r", log: Log("Test", sink: CaptureSink()))
+        let result = await fetcher.check(current: "0.1.7")
+        #expect(result.status == .current && !result.needsAuthentication)
+        #expect(transport.requests.count == 1)
         #expect(transport.requests.first?.value(forHTTPHeaderField: "Authorization") == nil)
+        #expect(!asked.value)
     }
 
-    @Test("A rejected token is retried once without it")
+    @Test("A rejected token leaves the release unavailable")
     func rejectedToken() async {
-        let transport = FakeTransport([FakeTransport.json("{}", status: 401), FakeTransport.json(Self.releaseText)])
+        let transport = FakeTransport([FakeTransport.json("{}", status: 404), FakeTransport.json("{}", status: 401)])
         let result = await makeFetcher(transport, token: "old").check(current: "0.1.6")
-        #expect(result.status == .update)
-        #expect(transport.requests.map { $0.value(forHTTPHeaderField: "Authorization") } == ["Bearer old", nil])
+        #expect(result.status == .unavailable)
+        #expect(transport.requests.map { $0.value(forHTTPHeaderField: "Authorization") } == [nil, "Bearer old"])
     }
 
     @Test("404 is unavailable, other statuses and network errors are errors")
     func failures() async {
-        let notFound = makeFetcher(FakeTransport([FakeTransport.json("{}", status: 404)]), token: "t")
+        let notFound = makeFetcher(
+            FakeTransport([FakeTransport.json("{}", status: 404), FakeTransport.json("{}", status: 404)]), token: "t")
         #expect(await notFound.check(current: "0.1.6").status == .unavailable)
         let offline = makeFetcher(FakeTransport([.failure(.notConnected)]), token: nil)
         #expect(

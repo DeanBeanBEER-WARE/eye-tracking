@@ -1,18 +1,11 @@
 import CoreKit
 import Foundation
 
-/// Loads and saves the fitted gaze model as JSON.
 public struct CalibrationStore: Sendable {
-    /// The calibration file.
     public let fileURL: URL
 
     private let log: Log
 
-    /// Creates the store.
-    ///
-    /// - Parameters:
-    ///   - fileURL: The calibration file.
-    ///   - log: The logger.
     public init(
         fileURL: URL = Paths.standard.supportDirectory.appendingPathComponent("calibration.json"),
         log: Log = Log("Calibration")
@@ -21,9 +14,6 @@ public struct CalibrationStore: Sendable {
         self.log = log
     }
 
-    /// Loads the saved model.
-    ///
-    /// - Returns: The model, or `nil` if none is saved or the file cannot be read.
     public func load() -> GazeModel? {
         guard let data = try? Data(contentsOf: fileURL) else {
             return nil
@@ -38,10 +28,6 @@ public struct CalibrationStore: Sendable {
         }
     }
 
-    /// Saves a model atomically.
-    ///
-    /// - Parameter model: The model.
-    /// - Throws: The encoding or file system error.
     public func save(_ model: GazeModel) throws {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

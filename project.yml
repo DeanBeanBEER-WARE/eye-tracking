@@ -1,7 +1,7 @@
 name: EyeTracking
 options:
   bundleIdPrefix: com.deanbean
-  developmentLanguage: de
+  developmentLanguage: en
   deploymentTarget:
     macOS: "14.0"
   createIntermediateGroups: true
@@ -28,7 +28,6 @@ targets:
     platform: macOS
     sources:
       - path: App
-      # Fetched by scripts/fetch_mediapipe.sh (gitignored).
       - path: Vendor/mediapipe/face_landmarker.task
         buildPhase: resources
     settings:
@@ -57,7 +56,6 @@ targets:
         product: GazeKit
       - package: EyeCore
         product: PointerKit
-      # Loaded at runtime with dlopen by the CMediaPipe shim, so it is embedded but not linked.
       - framework: Vendor/mediapipe/libmediapipe.dylib
         embed: true
         link: false

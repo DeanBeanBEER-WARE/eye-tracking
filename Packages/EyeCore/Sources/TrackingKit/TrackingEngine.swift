@@ -6,23 +6,13 @@ import Foundation
 import VideoToolbox
 import os
 
-/// The live numbers of the tracking pipeline.
 public struct TrackingStatistics: Equatable, Sendable {
-    /// The smoothed camera frame rate.
     public var framesPerSecond: Double
 
-    /// The smoothed MediaPipe inference time per frame in milliseconds.
     public var inferenceMilliseconds: Double
 
-    /// Whether the last frame contained a face.
     public var faceFound: Bool
 
-    /// Creates statistics.
-    ///
-    /// - Parameters:
-    ///   - framesPerSecond: The frame rate.
-    ///   - inferenceMilliseconds: The inference time in milliseconds.
-    ///   - faceFound: Whether the last frame contained a face.
     public init(framesPerSecond: Double = 0, inferenceMilliseconds: Double = 0, faceFound: Bool = false) {
         self.framesPerSecond = framesPerSecond
         self.inferenceMilliseconds = inferenceMilliseconds
@@ -30,23 +20,13 @@ public struct TrackingStatistics: Equatable, Sendable {
     }
 }
 
-/// The files the face landmarker needs.
 public struct TrackingResources: Sendable {
-    /// The path of `libmediapipe.dylib`.
     public var libraryPath: String
 
-    /// The path of `face_landmarker.task`.
     public var modelPath: String
 
-    /// An empty CA bundle that keeps MediaPipe's usage logging from uploading.
     public var caBundlePath: String
 
-    /// Creates the resource description.
-    ///
-    /// - Parameters:
-    ///   - libraryPath: The path of `libmediapipe.dylib`.
-    ///   - modelPath: The path of `face_landmarker.task`.
-    ///   - caBundlePath: The path of an empty CA bundle.
     public init(libraryPath: String, modelPath: String, caBundlePath: String) {
         self.libraryPath = libraryPath
         self.modelPath = modelPath
@@ -54,11 +34,7 @@ public struct TrackingResources: Sendable {
     }
 }
 
-/// Runs camera capture and face tracking on one serial queue and hands the results to the registered handlers.
-///
-/// Frames that arrive while the previous one is still processed are dropped by the camera.
 public final class TrackingEngine: @unchecked Sendable {
-    /// The interval between two preview images.
     public static let previewInterval: TimeInterval = 1.0 / 15
 
     private struct Handlers {
@@ -73,7 +49,6 @@ public final class TrackingEngine: @unchecked Sendable {
     private let log = Log("Tracking")
     private var camera: CameraCapture?
 
-    // Confined to `queue`.
     private var landmarker: FaceLandmarker?
     private var rgb: [UInt8] = []
     private var lastFrameTime: TimeInterval?
@@ -82,36 +57,22 @@ public final class TrackingEngine: @unchecked Sendable {
     private var inferenceMilliseconds: Double = 0
     private var loggedDetectionError = false
 
-    /// Creates the engine; nothing runs until ``start(deviceID:)``.
-    ///
-    /// - Parameter resources: The MediaPipe library and model.
     public init(resources: TrackingResources) {
         self.resources = resources
     }
 
-    /// The live numbers of the pipeline.
     public var statistics: TrackingStatistics {
         shared.withLock { $0.statistics }
     }
 
-    /// Sets the receiver of every tracking result (`nil` for a frame without a face), called on the tracking queue.
-    ///
-    /// - Parameter handler: The receiver, or `nil` to remove it.
     public func setObservationHandler(_ handler: (@Sendable (FaceObservation?) -> Void)?) {
         shared.withLock { $0.observation = handler }
     }
 
-    /// Sets the receiver of preview images (at most 15 per second), called on the tracking queue.
-    ///
-    /// - Parameter handler: The receiver, or `nil` to stop creating preview images.
     public func setPreviewHandler(_ handler: (@Sendable (CGImage, FaceObservation?) -> Void)?) {
         shared.withLock { $0.preview = handler }
     }
 
-    /// Loads MediaPipe on first use and starts the camera; blocks, so call it off the main thread.
-    ///
-    /// - Parameter deviceID: The camera to use, or `nil` for the built-in camera.
-    /// - Throws: ``FaceLandmarkerError`` or ``CameraError``.
     public func start(deviceID: String?) throws {
         try queue.sync {
             if landmarker == nil {
@@ -133,7 +94,6 @@ public final class TrackingEngine: @unchecked Sendable {
         try camera.start(deviceID: deviceID)
     }
 
-    /// Stops the camera; MediaPipe stays loaded for the next start.
     public func stop() {
         camera?.stop()
         shared.withLock { $0.statistics = TrackingStatistics() }

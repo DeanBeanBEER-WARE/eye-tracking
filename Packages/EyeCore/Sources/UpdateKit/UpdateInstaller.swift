@@ -1,45 +1,31 @@
 import CoreKit
 import Foundation
 
-/// A failed step of the update installation.
 public enum UpdateInstallError: Error, Equatable, Sendable {
-    /// No disk image could be downloaded.
     case downloadFailed
 
-    /// The disk image could not be mounted.
     case mountFailed
 
-    /// The disk image holds no app bundle.
     case noApp
 
-    /// The app could not be copied out of the disk image.
     case copyFailed
 
-    /// The app in the disk image is not Eye Tracking.
     case invalidBundle
 
-    /// The staged app is not signed with the certificate of the installed app.
     case signatureFailed
 
-    /// The swap script could not be started.
     case launchFailed
 }
 
-/// Downloads a release disk image, stages its app and starts the script that swaps the bundle after quit.
 public struct UpdateInstaller: Sendable {
-    /// The timeout of a download.
     public static let downloadTimeout: TimeInterval = 300
 
-    /// The timeout of `hdiutil attach` and `ditto`.
     public static let toolTimeout: TimeInterval = 120
 
-    /// The timeout of `hdiutil detach`.
     public static let detachTimeout: TimeInterval = 60
 
-    /// The disk image tool.
     public static let hdiutil = "/usr/bin/hdiutil"
 
-    /// The copy tool that keeps bundle metadata.
     public static let ditto = "/usr/bin/ditto"
 
     private let runner: any ProcessRunner
@@ -52,20 +38,6 @@ public struct UpdateInstaller: Sendable {
     private let signatureCheck: (@Sendable (URL) -> Bool?)?
     private let log: Log
 
-    /// Creates the installer.
-    ///
-    /// - Parameters:
-    ///   - runner: Runs `hdiutil` and `ditto`.
-    ///   - token: Returns the GitHub token for the private asset, or `nil`; may block.
-    ///   - download: Downloads a request to a destination file.
-    ///   - spawn: Starts the detached swap script with an executable and its arguments.
-    ///   - temporaryDirectory: The directory the work directory is created in.
-    ///   - processIdentifier: The process the swap script waits for.
-    ///   - bundleIdentifier: The bundle identifier the staged app must have.
-    ///   - signatureCheck: Validates a staged bundle against the code-signing requirement of the running app;
-    ///     `nil` as result skips the check (an unsigned running app, for example a Debug build), `false` rejects
-    ///     the bundle.
-    ///   - log: The logger.
     public init(
         runner: any ProcessRunner,
         token: @escaping @Sendable () -> String?,
@@ -88,15 +60,6 @@ public struct UpdateInstaller: Sendable {
         self.log = log
     }
 
-    /// The request that downloads the disk image of a release.
-    ///
-    /// With a token the asset API URL is used (the only way to reach assets of a private repository); without one
-    /// the browser download URL.
-    ///
-    /// - Parameters:
-    ///   - result: The update result of the release.
-    ///   - token: The GitHub token, or `nil`.
-    /// - Returns: The request, or `nil` if the release has no usable disk image URL.
     public static func downloadRequest(for result: UpdateResult, token: String?) -> URLRequest? {
         if let token, let url = URL(string: result.assetAPIURL), !result.assetAPIURL.isEmpty {
             var request = URLRequest(url: url, timeoutInterval: downloadTimeout)
@@ -110,14 +73,6 @@ public struct UpdateInstaller: Sendable {
         return URLRequest(url: url, timeoutInterval: downloadTimeout)
     }
 
-    /// Downloads and stages the release and starts the swap script; the caller must quit afterwards.
-    ///
-    /// The work directory is removed on failure; on success the script removes it.
-    ///
-    /// - Parameters:
-    ///   - result: The update result of the release.
-    ///   - target: The installed app bundle to replace.
-    /// - Throws: `UpdateInstallError` for the failed step.
     public func install(_ result: UpdateResult, target: String) async throws(UpdateInstallError) {
         let fileManager = FileManager.default
         let work = temporaryDirectory.appendingPathComponent(
@@ -146,10 +101,6 @@ public struct UpdateInstaller: Sendable {
         }
     }
 
-    /// Reads the bundle identifier of an app bundle.
-    ///
-    /// - Parameter app: The app bundle.
-    /// - Returns: The `CFBundleIdentifier` of its `Info.plist`, or `nil` if it cannot be read.
     public static func bundleIdentifier(of app: URL) -> String? {
         guard let data = try? Data(contentsOf: app.appendingPathComponent("Contents/Info.plist")),
             let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
@@ -160,7 +111,7 @@ public struct UpdateInstaller: Sendable {
     }
 
     private func downloadImage(_ result: UpdateResult, into work: URL) async throws(UpdateInstallError) -> URL {
-        let token = await Offload.run(token)
+        let token = result.needsAuthentication ? await Offload.run(token) : nil
         guard let request = Self.downloadRequest(for: result, token: token) else {
             log.warning("The release has no disk image to download.")
             throw UpdateInstallError.downloadFailed
@@ -222,15 +173,11 @@ public struct UpdateInstaller: Sendable {
     }
 
     private func firstApp(in directory: URL) -> URL? {
-        // Names instead of listed URLs keep every path under `directory` as given (listing resolves /var symlinks).
         let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
         let name = names.filter { ($0 as NSString).pathExtension == "app" }.min()
         return name.map { directory.appendingPathComponent($0) }
     }
 
-    /// Runs a tool off the cooperative pool.
-    ///
-    /// - Returns: `true` if the tool exited with status 0.
     private func run(_ executable: String, _ arguments: [String], timeout: TimeInterval, label: String) async -> Bool {
         let runner = runner
         let result = await Offload.run {

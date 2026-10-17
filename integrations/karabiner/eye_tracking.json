@@ -2,7 +2,7 @@
   "title": "Eye Tracking",
   "rules": [
     {
-      "description": "Eye Tracking: Ctrl+Option+Command+G schaltet die Blicksteuerung an/aus",
+      "description": "Eye Tracking: Ctrl+Option+Command+G toggles gaze control",
       "manipulators": [
         {
           "type": "basic",
@@ -12,7 +12,7 @@
       ]
     },
     {
-      "description": "Eye Tracking: Caps Lock halten pausiert die Blicksteuerung (antippen = Caps Lock)",
+      "description": "Eye Tracking: holding Caps Lock pauses gaze control (tap = Caps Lock)",
       "manipulators": [
         {
           "type": "basic",
@@ -24,7 +24,7 @@
       ]
     },
     {
-      "description": "Eye Tracking: Ctrl+Option+Command+P halten pausiert die Blicksteuerung",
+      "description": "Eye Tracking: holding Ctrl+Option+Command+P pauses gaze control",
       "manipulators": [
         {
           "type": "basic",
@@ -35,7 +35,7 @@
       ]
     },
     {
-      "description": "Eye Tracking: Ctrl+Option+Command+K startet die Kalibrierung",
+      "description": "Eye Tracking: Ctrl+Option+Command+K starts a calibration",
       "manipulators": [
         {
           "type": "basic",

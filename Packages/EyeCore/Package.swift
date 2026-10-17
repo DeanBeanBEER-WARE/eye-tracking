@@ -1,11 +1,6 @@
 // swift-tools-version: 6.0
-
 import PackageDescription
 
-/// The modules of the app: `CoreKit` is the shared base, `UpdateKit` holds the GitHub release updater,
-/// `AppSupportKit` the AppKit helpers of the menu, `CMediaPipe` the C shim around the MediaPipe Tasks C API,
-/// `TrackingKit` the camera and face tracking pipeline, `GazeKit` the calibration and gaze model and `PointerKit`
-/// the decisions of the gaze pointer.
 let strict: [SwiftSetting] = [.unsafeFlags(["-warnings-as-errors"])]
 
 let package = Package(

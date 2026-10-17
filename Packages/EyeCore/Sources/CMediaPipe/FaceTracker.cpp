@@ -11,7 +11,6 @@
 #include "mediapipe/tasks/c/vision/face_landmarker/face_landmarker.h"
 
 namespace {
-
 struct Api {
     decltype(&MpFaceLandmarkerCreate) create = nullptr;
     decltype(&MpFaceLandmarkerDetectForVideo) detectForVideo = nullptr;
@@ -33,8 +32,7 @@ bool resolve(void *library, const char *name, Function &function) {
     function = reinterpret_cast<Function>(dlsym(library, name));
     return function != nullptr;
 }
-
-}  // namespace
+}
 
 struct CMPFaceTracker {
     Api api;
@@ -48,7 +46,6 @@ struct CMPFaceTracker {
 
 extern "C" CMPFaceTracker *cmp_face_tracker_create(
     const char *libraryPath, const char *modelPath, const char *caBundlePath, char *error, int32_t errorLength) {
-    // The library is never closed: unloading a large C++ library with static state is unsafe.
     void *library = dlopen(libraryPath, RTLD_NOW | RTLD_LOCAL);
     if (library == nullptr) {
         copyError(error, errorLength, dlerror());

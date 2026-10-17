@@ -6,7 +6,6 @@ import Security
 import UpdateKit
 
 extension UpdateInstallError {
-    /// The localized message of the failure.
     var message: String {
         switch self {
         case .downloadFailed: String(localized: "update.error.download")
@@ -21,15 +20,6 @@ extension UpdateInstallError {
 }
 
 extension UpdateInstaller {
-    /// Creates the installer of the app: `URLSession` downloads and a detached swap script logging to `update.log`.
-    ///
-    /// The staged bundle must satisfy the code-signing requirement built from the running app's own signature
-    /// (bundle identifier plus leaf certificate); a running app without a certificate skips the check.
-    ///
-    /// - Parameters:
-    ///   - runner: Runs `hdiutil` and `ditto`.
-    ///   - token: Returns the GitHub token for the private asset.
-    /// - Returns: The installer.
     static func system(runner: any ProcessRunner, token: @escaping @Sendable () -> String?) -> UpdateInstaller {
         let logFile = Paths.standard.updateLogFile
         let log = Log("Updater")
@@ -57,11 +47,7 @@ extension UpdateInstaller {
     }
 }
 
-/// Reads the code-signing requirement of the running app and checks staged bundles against it.
 enum AppSignature {
-    /// The requirement of the running app: its bundle identifier and the leaf certificate of its signature.
-    ///
-    /// - Returns: The requirement, or `nil` if the app is unsigned or the signature cannot be read.
     static func requirement() -> SecRequirement? {
         var code: SecCode?
         var staticCode: SecStaticCode?
@@ -86,12 +72,6 @@ enum AppSignature {
         return requirement
     }
 
-    /// Whether a bundle satisfies a requirement.
-    ///
-    /// - Parameters:
-    ///   - bundle: The bundle to check, for example a staged update.
-    ///   - requirement: The requirement.
-    /// - Returns: `true` if the bundle satisfies it.
     static func satisfies(_ bundle: URL, requirement: SecRequirement) -> Bool {
         var staticCode: SecStaticCode?
         guard SecStaticCodeCreateWithPath(bundle as CFURL, [], &staticCode) == errSecSuccess, let staticCode else {

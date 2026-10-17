@@ -2,26 +2,20 @@ import AppKit
 import CoreKit
 import TrackingKit
 
-/// The camera preview window: the mirrored camera image with eye landmarks, frame rate, inference time and pose.
 @MainActor
 final class PreviewWindowController: NSObject, NSWindowDelegate {
     private let tracking: TrackingController
     private var window: NSWindow?
     private var view: PreviewView?
 
-    /// Whether the window is open.
     var isVisible: Bool {
         window != nil
     }
 
-    /// Creates the controller; the window opens with ``toggle()``.
-    ///
-    /// - Parameter tracking: The tracking controller that delivers the frames.
     init(tracking: TrackingController) {
         self.tracking = tracking
     }
 
-    /// Opens the window, or closes it if it is open.
     func toggle() {
         if let window {
             window.close()
@@ -50,9 +44,6 @@ final class PreviewWindowController: NSObject, NSWindowDelegate {
         window.makeKeyAndOrderFront(nil)
     }
 
-    /// Stops the preview images and the camera when the window closes.
-    ///
-    /// - Parameter notification: The close notification.
     func windowWillClose(_ notification: Notification) {
         tracking.engine.setPreviewHandler(nil)
         tracking.release(.preview)
@@ -61,7 +52,6 @@ final class PreviewWindowController: NSObject, NSWindowDelegate {
     }
 }
 
-/// Draws the mirrored camera image with the eye landmarks and a status line.
 final class PreviewView: NSView {
     private static let eyeCorners = [33, 133, 362, 263]
     private static let eyelids = [159, 145, 386, 374]
@@ -76,12 +66,6 @@ final class PreviewView: NSView {
         true
     }
 
-    /// Shows a new frame.
-    ///
-    /// - Parameters:
-    ///   - image: The camera image.
-    ///   - observation: The face in the image, if any.
-    ///   - statistics: The live numbers of the pipeline.
     func show(image: CGImage, observation: FaceObservation?, statistics: TrackingStatistics) {
         self.image = image
         self.observation = observation
@@ -119,7 +103,6 @@ final class PreviewView: NSView {
 
     private func point(_ observation: FaceObservation, _ index: Int, in frame: CGRect) -> CGPoint {
         let landmark = observation.landmarks[index]
-        // Mirrored like the image, so the preview behaves like a mirror.
         return CGPoint(
             x: frame.minX + (1 - CGFloat(landmark.x)) * frame.width, y: frame.minY + CGFloat(landmark.y) * frame.height)
     }

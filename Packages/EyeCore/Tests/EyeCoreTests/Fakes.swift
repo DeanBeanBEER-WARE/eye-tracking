@@ -3,7 +3,6 @@ import os
 
 @testable import CoreKit
 
-/// A value guarded by a lock, for state shared with `@Sendable` closures.
 final class Locked<Value: Sendable>: Sendable {
     private let storage: OSAllocatedUnfairLock<Value>
 
@@ -20,7 +19,6 @@ final class Locked<Value: Sendable>: Sendable {
     }
 }
 
-/// A transport that replays scripted replies and records the requests.
 final class FakeTransport: HTTPTransport {
     enum Reply: Sendable {
         case response(HTTPResponse)
@@ -60,7 +58,6 @@ final class FakeTransport: HTTPTransport {
     }
 }
 
-/// A log sink that keeps every message.
 final class CaptureSink: LogSink {
     struct Entry: Equatable, Sendable {
         var level: LogLevel
@@ -79,7 +76,6 @@ final class CaptureSink: LogSink {
     }
 }
 
-/// A process runner that answers from a closure and records every call.
 final class FakeProcessRunner: ProcessRunner {
     struct Call: Equatable, Sendable {
         var executable: String
@@ -104,7 +100,6 @@ final class FakeProcessRunner: ProcessRunner {
     }
 }
 
-/// Creates an empty temporary directory; the caller removes it.
 func makeTemporaryDirectory() throws -> URL {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
         "eyecore-tests-\(UUID().uuidString)", isDirectory: true)

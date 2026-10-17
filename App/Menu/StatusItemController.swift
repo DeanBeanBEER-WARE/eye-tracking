@@ -1,20 +1,14 @@
 import AppKit
 import CoreKit
 
-/// Carries the command of a menu item in its `representedObject`.
 final class MenuCommandBox: NSObject {
-    /// The command performed when the item is clicked.
     let command: MenuCommand
 
-    /// Wraps a command.
-    ///
-    /// - Parameter command: The command.
     init(_ command: MenuCommand) {
         self.command = command
     }
 }
 
-/// Owns the menu bar status item and rebuilds its menu every time it opens.
 @MainActor
 final class StatusItemController: NSObject, NSMenuDelegate {
     private static let iconSize = NSSize(width: 18, height: 18)
@@ -23,9 +17,6 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let menu = NSMenu()
     private let actions: MenuActions
 
-    /// Creates the status item with the template icon and an empty menu that is filled on demand.
-    ///
-    /// - Parameter actions: Provides the menu state and performs the clicked commands.
     init(actions: MenuActions) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         self.actions = actions
@@ -36,9 +27,6 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         statusItem.menu = menu
     }
 
-    /// Rebuilds the menu right before it is shown.
-    ///
-    /// - Parameter menu: The menu that is about to open.
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         for item in items(MenuModel.build(state: actions.state())) {

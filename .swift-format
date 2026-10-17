@@ -26,7 +26,7 @@
   },
   "respectsExistingLineBreaks": true,
   "rules": {
-    "AllPublicDeclarationsHaveDocumentation": true,
+    "AllPublicDeclarationsHaveDocumentation": false,
     "AlwaysUseLiteralForEmptyCollectionInit": false,
     "AlwaysUseLowerCamelCase": true,
     "AmbiguousTrailingClosureOverload": true,
@@ -66,9 +66,9 @@
     "UseShorthandTypeNames": true,
     "UseSingleLinePropertyGetter": true,
     "UseSynthesizedInitializer": true,
-    "UseTripleSlashForDocumentationComments": true,
+    "UseTripleSlashForDocumentationComments": false,
     "UseWhereClausesInForLoops": false,
-    "ValidateDocumentationComments": true
+    "ValidateDocumentationComments": false
   },
   "spacesAroundRangeFormationOperators": false,
   "spacesBeforeEndOfLineComments": 2,

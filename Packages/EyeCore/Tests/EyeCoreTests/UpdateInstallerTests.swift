@@ -6,7 +6,6 @@ import Testing
 
 @Suite("Update installer")
 struct UpdateInstallerTests {
-    /// How the fake tools behave.
     struct Behavior: Sendable {
         var downloadSucceeds = true
         var attachSucceeds = true
@@ -16,7 +15,6 @@ struct UpdateInstallerTests {
         var signatureResult: Bool? = nil
     }
 
-    /// What one installation did.
     struct Outcome {
         var error: UpdateInstallError?
         var calls: [FakeProcessRunner.Call]
@@ -27,7 +25,8 @@ struct UpdateInstallerTests {
 
     private static let release = UpdateResult(
         status: .update, latest: "0.1.7", url: "https://x/r", tag: "v0.1.7", dmgURL: "https://x/E-0.1.7.dmg",
-        assetAPIURL: "https://api.github.com/repos/o/r/releases/assets/7", dmgName: "EyeTracking-0.1.7.dmg")
+        assetAPIURL: "https://api.github.com/repos/o/r/releases/assets/7", dmgName: "EyeTracking-0.1.7.dmg",
+        needsAuthentication: true)
 
     private static func writeApp(at app: URL, identifier: String) throws {
         let contents = app.appendingPathComponent("Contents")
@@ -135,6 +134,15 @@ struct UpdateInstallerTests {
     @Test("Without a token the browser download URL is used")
     func anonymousDownload() async throws {
         let outcome = try await install(Behavior(), token: nil)
+        #expect(outcome.error == nil)
+        #expect(outcome.downloads.first?.url?.absoluteString == "https://x/E-0.1.7.dmg")
+    }
+
+    @Test("A public release is downloaded without the token")
+    func publicDownload() async throws {
+        var release = Self.release
+        release.needsAuthentication = false
+        let outcome = try await install(Behavior(), token: "t0k", release: release)
         #expect(outcome.error == nil)
         let request = try #require(outcome.downloads.first)
         #expect(request.url?.absoluteString == "https://x/E-0.1.7.dmg")

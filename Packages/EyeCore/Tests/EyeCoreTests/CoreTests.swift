@@ -35,7 +35,6 @@ struct CoreTests {
         #expect(running[2] == .item(MenuItem(.gazeControl)))
         #expect(running[4] == .item(MenuItem(.calibrating)))
         #expect(running[5] == .item(MenuItem(.gazeDot)))
-        // Gaze control that is on can always be switched off.
         let on = MenuModel.build(state: MenuState(version: "0.4.0", isGazeControlOn: true, isSnappingOn: true))
         #expect(on[2] == .item(MenuItem(.gazeControl, command: .toggleGazeControl, isChecked: true)))
         #expect(on[3] == .item(MenuItem(.snapping, command: .toggleSnapping, isChecked: true)))

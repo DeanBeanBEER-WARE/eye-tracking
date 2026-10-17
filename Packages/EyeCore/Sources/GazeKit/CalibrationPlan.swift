@@ -1,36 +1,21 @@
 import CoreGraphics
 import Foundation
 
-/// A point the user looks at during calibration.
 public struct CalibrationTarget: Codable, Equatable, Sendable {
-    /// What the user does while the target is shown.
     public enum Phase: String, Codable, Sendable {
-        /// Looks at the target with a still head.
         case grid
 
-        /// Keeps looking at the target while moving the head slightly, so the model learns head movement.
         case headMovement
     }
 
-    /// The display the target is on.
     public var displayID: UInt32
 
-    /// The position on the display, (0, 0) top left and (1, 1) bottom right.
     public var normalized: CGPoint
 
-    /// The position in global points.
     public var point: CGPoint
 
-    /// The phase.
     public var phase: Phase
 
-    /// Creates a target.
-    ///
-    /// - Parameters:
-    ///   - displayID: The display.
-    ///   - normalized: The position on the display.
-    ///   - point: The position in global points.
-    ///   - phase: The phase.
     public init(displayID: UInt32, normalized: CGPoint, point: CGPoint, phase: Phase) {
         self.displayID = displayID
         self.normalized = normalized
@@ -39,23 +24,13 @@ public struct CalibrationTarget: Codable, Equatable, Sendable {
     }
 }
 
-/// Creates the target sequence of a calibration.
 public enum CalibrationPlan {
-    /// The seconds a grid target waits for the eyes to settle before samples are taken.
     public static let settleTime: TimeInterval = 0.7
 
-    /// The seconds samples are taken at a grid target.
     public static let gridSampleTime: TimeInterval = 1.0
 
-    /// The seconds samples are taken at a head movement target.
     public static let headMovementSampleTime: TimeInterval = 3.0
 
-    /// The targets for all displays: a 5x3 grid on wide displays, 3x3 on the others, built-in display first,
-    /// then the others from bottom to top, each grid in snake order; followed by one head movement target in the
-    /// center of every display.
-    ///
-    /// - Parameter layout: The displays.
-    /// - Returns: The targets in display order.
     public static func targets(for layout: ScreenLayout) -> [CalibrationTarget] {
         let ordered = layout.displays.sorted { lhs, rhs in
             if lhs.isBuiltIn != rhs.isBuiltIn {

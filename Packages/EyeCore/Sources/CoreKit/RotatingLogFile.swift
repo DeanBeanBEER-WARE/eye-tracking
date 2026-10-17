@@ -1,43 +1,23 @@
 import Foundation
 import os
 
-/// A size-limited log file with numbered backups.
-///
-/// Before a line is written that would make the file reach the size limit, the file is renamed to `.1`, older
-/// backups move one number up and the oldest one is dropped.
 public final class RotatingLogFile: LogSink {
-    /// The default file name inside the log directory.
     public static let defaultFileName = "eye_tracking.log"
 
-    /// The default size limit of the active file in bytes.
     public static let defaultMaxBytes = 5 * 1024 * 1024
 
-    /// The default number of backups.
     public static let defaultBackupCount = 3
 
-    /// The active log file.
     public let fileURL: URL
 
-    /// The size limit of the active file in bytes.
     public let maxBytes: Int
 
-    /// The number of backups kept next to the active file.
     public let backupCount: Int
 
     private let timeZone: TimeZone
     private let now: @Sendable () -> Date
     private let lock = OSAllocatedUnfairLock()
 
-    /// Creates the log file, falling back to a temporary directory if the preferred one is not writable.
-    ///
-    /// - Parameters:
-    ///   - directory: The preferred log directory.
-    ///   - fallbackDirectory: The directory used if the preferred one is not writable.
-    ///   - fileName: The file name of the active file.
-    ///   - maxBytes: The size limit of the active file in bytes.
-    ///   - backupCount: The number of backups.
-    ///   - timeZone: The time zone of the timestamps.
-    ///   - now: The clock, injectable for tests.
     public init(
         directory: URL,
         fallbackDirectory: URL = FileManager.default.temporaryDirectory.appendingPathComponent(AppInfo.directoryName),
@@ -56,22 +36,10 @@ public final class RotatingLogFile: LogSink {
         self.now = now
     }
 
-    /// Returns the location of a backup.
-    ///
-    /// - Parameter index: The backup number, starting at 1.
-    /// - Returns: The backup file next to the active file.
     public func backupURL(_ index: Int) -> URL {
         fileURL.deletingLastPathComponent().appendingPathComponent("\(fileURL.lastPathComponent).\(index)")
     }
 
-    /// Appends one formatted line, rotating first if the line would reach the size limit.
-    ///
-    /// Write errors are ignored: logging must never break the application.
-    ///
-    /// - Parameters:
-    ///   - level: The severity.
-    ///   - category: The component that logged the message.
-    ///   - message: The message text.
     public func write(level: LogLevel, category: String, message: String) {
         let line = RotatingLogFile.formatLine(
             date: now(),
@@ -90,15 +58,6 @@ public final class RotatingLogFile: LogSink {
         }
     }
 
-    /// Formats one log line as `yyyy-MM-dd HH:mm:ss,SSS [LEVEL   ] category: message`.
-    ///
-    /// - Parameters:
-    ///   - date: The time of the message.
-    ///   - level: The severity.
-    ///   - category: The component that logged the message.
-    ///   - message: The message text.
-    ///   - timeZone: The time zone of the timestamp.
-    /// - Returns: The line including the trailing newline.
     public static func formatLine(
         date: Date,
         level: LogLevel,

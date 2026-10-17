@@ -7,10 +7,8 @@ import Testing
 
 @Suite("Pointer")
 struct PointerTests {
-    /// 0.25 mm per point: 2 degrees at 650 mm are about 22.7 mm or 91 points.
     static let millimetersPerPoint = 0.25
 
-    /// Feeds one estimate to the policy.
     static func move(
         _ policy: inout PointerPolicy, _ x: CGFloat, _ y: CGFloat, speed: Double = 0, at time: TimeInterval
     ) -> CGPoint? {
@@ -23,7 +21,6 @@ struct PointerTests {
         var policy = PointerPolicy()
         let first = Self.move(&policy, 100, 100, at: 0)
         #expect(first == CGPoint(x: 100, y: 100))
-        // The gaze rests for the settle time, so the cursor stops following.
         _ = Self.move(&policy, 100, 100, at: 0.2)
         #expect(!policy.isFollowing)
         let small = Self.move(&policy, 150, 120, at: 0.3)
@@ -31,7 +28,6 @@ struct PointerTests {
         let jump = Self.move(&policy, 400, 100, speed: 200, at: 0.4)
         #expect(jump == CGPoint(x: 400, y: 100))
         #expect(policy.isFollowing)
-        // While following, small moves are passed on until the gaze rests again.
         let glide = Self.move(&policy, 410, 100, speed: 50, at: 0.45)
         #expect(glide == CGPoint(x: 410, y: 100))
         _ = Self.move(&policy, 412, 100, speed: 2, at: 0.5)
@@ -52,7 +48,6 @@ struct PointerTests {
         policy.button(1, isDown: false, now: 1.2)
         let hold = Self.move(&policy, 900, 900, at: 1.3)
         #expect(hold == nil)
-        // After the hold the current gaze becomes the anchor; only a new saccade moves the cursor.
         let anchored = Self.move(&policy, 900, 900, at: 1.6)
         let near = Self.move(&policy, 950, 900, at: 1.7)
         let saccade = Self.move(&policy, 1300, 900, speed: 200, at: 1.8)
@@ -94,15 +89,12 @@ struct PointerTests {
         let button = CGRect(x: 120, y: 90, width: 60, height: 20)
         #expect(SnapSelector.choose(from: [button], near: point, radius: 50) == CGPoint(x: 150, y: 100))
         #expect(SnapSelector.choose(from: [button], near: point, radius: 10) == nil)
-        // Inside a small element the cursor moves to its center; inside a large one it stays.
         let inside = CGRect(x: 80, y: 90, width: 60, height: 20)
         #expect(SnapSelector.choose(from: [inside], near: point, radius: 50) == CGPoint(x: 110, y: 100))
         let wide = CGRect(x: 0, y: 80, width: 600, height: 40)
         #expect(SnapSelector.choose(from: [wide], near: point, radius: 50) == nil)
-        // A link inside a toolbar wins over the toolbar.
         let link = CGRect(x: 95, y: 95, width: 30, height: 10)
         #expect(SnapSelector.choose(from: [wide, link], near: point, radius: 50) == CGPoint(x: 110, y: 100))
-        // Two buttons at almost the same distance on both sides: ambiguous.
         let left = CGRect(x: 40, y: 90, width: 40, height: 20)
         let right = CGRect(x: 122, y: 90, width: 40, height: 20)
         #expect(SnapSelector.choose(from: [left, right], near: point, radius: 50) == nil)

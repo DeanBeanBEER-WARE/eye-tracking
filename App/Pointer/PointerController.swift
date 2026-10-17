@@ -4,22 +4,14 @@ import CoreKit
 import GazeKit
 import PointerKit
 
-/// Gaze control: moves the cursor with the gaze and takes the external mouse while the face is visible.
-///
-/// Buttons, wheel and tilt of the seized mouse are re-injected; its motion only drags while a button is held. The
-/// trackpad is never seized: using it pauses gaze for a moment, so it serves as fine correction and as a way out.
 @MainActor
 final class PointerController {
-    /// The points a device count of the seized mouse drags.
     private static let dragGain: CGFloat = 0.75
 
-    /// The search radius for snapping in degrees of gaze angle.
     private static let snapRadiusDegrees = 2.5
 
-    /// The seconds between attempts to take a mouse the system refused.
     private static let seizeRetryInterval: TimeInterval = 3
 
-    /// The seconds the app waits for the permissions after asking for them.
     private static let permissionWait: TimeInterval = 180
 
     private let gaze: GazeService
@@ -42,15 +34,12 @@ final class PointerController {
     private var nextSeizeRetry: TimeInterval = 0
     private var askedForInputMonitoring = false
 
-    /// Whether gaze control is on.
     private(set) var isEnabled = false
 
-    /// Whether the cursor snaps to clickable elements after the gaze landed.
     var isSnappingOn: Bool {
         settings.load().snapping
     }
 
-    /// Switches snapping on or off.
     func toggleSnapping() {
         let enabled = !isSnappingOn
         do {
@@ -64,11 +53,6 @@ final class PointerController {
         }
     }
 
-    /// Creates the controller; gaze control starts with ``restore()`` or ``toggle()``.
-    ///
-    /// - Parameters:
-    ///   - gaze: Delivers the gaze estimates.
-    ///   - settings: Remembers whether gaze control is on.
     init(gaze: GazeService, settings: SettingsStore) {
         self.gaze = gaze
         self.settings = settings
@@ -83,14 +67,12 @@ final class PointerController {
         }
     }
 
-    /// Switches gaze control on at launch if it was on when the app last ran.
     func restore() {
         if settings.load().gazeControl {
             enable(interactive: false)
         }
     }
 
-    /// Switches gaze control on or off.
     func toggle() {
         if isEnabled {
             disable()
@@ -100,9 +82,6 @@ final class PointerController {
         }
     }
 
-    /// Pauses gaze control while a hotkey is held; the mouse works normally during the pause.
-    ///
-    /// - Parameter paused: Whether the pause starts or ends.
     func setPaused(_ paused: Bool) {
         guard paused != isPaused else {
             return
@@ -116,9 +95,6 @@ final class PointerController {
         }
     }
 
-    /// Suspends gaze control while a calibration runs.
-    ///
-    /// - Parameter suspended: Whether the calibration starts or ended.
     func setSuspended(_ suspended: Bool) {
         isSuspended = suspended
         if suspended {
@@ -131,7 +107,6 @@ final class PointerController {
         }
     }
 
-    /// Follows a change of the displays: stops without a matching calibration, resumes when it matches again.
     func displaysChanged() {
         layout = DisplayLayoutReader.current()
         if gaze.model == nil, isEnabled {
@@ -142,7 +117,6 @@ final class PointerController {
         }
     }
 
-    /// Gives the mouse back before the app quits.
     func shutDown() {
         disable()
     }
@@ -233,7 +207,6 @@ final class PointerController {
         }
     }
 
-    /// Asks once per run for Input Monitoring after the system refused to hand over a mouse.
     private func askForInputMonitoring() {
         guard !askedForInputMonitoring, !PointerPermissions.canListen else {
             return
@@ -279,7 +252,6 @@ final class PointerController {
         }
     }
 
-    /// Moves the cursor to the clickable element nearest to a landing point, unless anything changed meanwhile.
     private func snap(at landing: CGPoint, millimetersPerPoint: Double) {
         guard ElementSnapper.isTrusted else {
             if !askedForAccessibility {
@@ -320,7 +292,6 @@ final class PointerController {
         }
     }
 
-    /// Collects the X and Y values of one report into one drag event.
     private func scheduleFlush() {
         guard !flushScheduled else {
             return

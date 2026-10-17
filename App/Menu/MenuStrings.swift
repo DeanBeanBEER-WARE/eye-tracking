@@ -1,12 +1,7 @@
 import CoreKit
 import Foundation
 
-/// The localized titles of the status menu entries.
 enum MenuStrings {
-    /// Returns the title of an entry.
-    ///
-    /// - Parameter label: The label of the entry.
-    /// - Returns: The localized title.
     static func text(_ label: MenuLabel) -> String {
         switch label {
         case .version(let version):

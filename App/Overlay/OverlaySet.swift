@@ -1,42 +1,29 @@
 import AppKit
 import CoreGraphics
 
-/// What one overlay view draws, in CoreGraphics global points.
 struct OverlayContent {
-    /// The calibration target with the radius of its shrinking ring.
     struct Target {
         var point: CGPoint
         var ring: CGFloat
     }
 
-    /// Whether the screen is dimmed.
     var dimmed = false
 
-    /// The calibration target, if any.
     var target: Target?
 
-    /// The live gaze dot, if any.
     var gazeDot: CGPoint?
 
-    /// A message shown in the center of the display that contains `messageAnchor`.
     var message: String?
 
-    /// A point on the display that shows the message.
     var messageAnchor: CGPoint?
 }
 
-/// Transparent full-screen windows on every display, above all apps and Spaces.
 @MainActor
 final class OverlaySet {
     private var windows: [(window: OverlayWindow, view: OverlayView)] = []
 
-    /// Called when Escape is pressed in a key overlay window.
     var onEscape: (() -> Void)?
 
-    /// Creates one window per screen.
-    ///
-    /// - Parameter interactive: Whether the windows take key events (for Escape); a non-interactive set never
-    ///   becomes key and lets every event through.
     init(interactive: Bool) {
         for screen in NSScreen.screens {
             guard let id = DisplayLayoutReader.displayID(of: screen) else {
@@ -61,7 +48,6 @@ final class OverlaySet {
         }
     }
 
-    /// Shows the windows; an interactive set takes the keyboard focus.
     func show() {
         for entry in windows {
             entry.window.orderFrontRegardless()
@@ -72,16 +58,12 @@ final class OverlaySet {
         }
     }
 
-    /// Shows new content on all windows.
-    ///
-    /// - Parameter content: The content in global points.
     func update(_ content: OverlayContent) {
         for entry in windows {
             entry.view.content = content
         }
     }
 
-    /// Closes all windows.
     func close() {
         for entry in windows {
             entry.window.orderOut(nil)
@@ -91,12 +73,9 @@ final class OverlaySet {
     }
 }
 
-/// A borderless window that can become key for Escape when asked to.
 final class OverlayWindow: NSWindow {
-    /// Whether the window may become key.
     var acceptsKey = false
 
-    /// Called on Escape.
     var onEscape: (() -> Void)?
 
     override var canBecomeKey: Bool {
@@ -116,11 +95,9 @@ final class OverlayWindow: NSWindow {
     }
 }
 
-/// Draws the overlay content of one display.
 final class OverlayView: NSView {
     private let displayFrame: CGRect
 
-    /// The content in global points; only the changed regions are redrawn.
     var content = OverlayContent() {
         didSet {
             let messageMoved = content.message != nil && content.messageAnchor != oldValue.messageAnchor
@@ -137,11 +114,6 @@ final class OverlayView: NSView {
         }
     }
 
-    /// Creates the view.
-    ///
-    /// - Parameters:
-    ///   - frame: The view frame.
-    ///   - displayFrame: The display frame in global points, to place global points in the view.
     init(frame: NSRect, displayFrame: CGRect) {
         self.displayFrame = displayFrame
         super.init(frame: frame)

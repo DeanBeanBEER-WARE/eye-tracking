@@ -3,10 +3,6 @@ import Foundation
 import IOKit.hid
 import PointerKit
 
-/// Takes exclusive access to the external mice, so their motion no longer reaches the system, and forwards their
-/// input values. The built-in trackpad, other trackpads and virtual devices (Karabiner) are never touched.
-///
-/// The kernel ends the exclusive access when the process exits, also after a crash or a forced kill.
 @MainActor
 final class MouseSeizer {
     private static let seizeOptions = IOOptionBits(kIOHIDOptionsTypeSeizeDevice)
@@ -16,21 +12,16 @@ final class MouseSeizer {
     private var seized: [IOHIDDevice] = []
     private var refused: Set<String> = []
 
-    /// Whether the seizer takes the matching mice, including mice connected later.
     private(set) var isEngaged = false
 
-    /// Receives the input of the seized mice on the main thread.
     var onInput: ((MouseInput) -> Void)?
 
-    /// Called when the system refuses a mouse for lack of a permission.
     var onPermissionRefused: (() -> Void)?
 
-    /// Whether a matching mouse could not be taken over.
     var hasRefusedDevices: Bool {
         !refused.isEmpty
     }
 
-    /// Creates the seizer; nothing is seized until ``engage()``.
     init() {
         manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
         let matching: [String: Int] = [
@@ -64,7 +55,6 @@ final class MouseSeizer {
         IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue)
     }
 
-    /// Seizes all matching mice now and every matching mouse connected later.
     func engage() {
         guard !isEngaged else {
             return
@@ -79,7 +69,6 @@ final class MouseSeizer {
         }
     }
 
-    /// Tries again to take the mice that were refused, for example after a permission was granted.
     func retry() {
         guard isEngaged else {
             return
@@ -90,7 +79,6 @@ final class MouseSeizer {
         }
     }
 
-    /// Gives all seized mice back to the system.
     func release() {
         guard isEngaged else {
             return
@@ -161,7 +149,6 @@ final class MouseSeizer {
         log.info("Took over \(name).")
     }
 
-    /// Whether a device is an external mouse that may be seized.
     private static func isExternalMouse(_ device: IOHIDDevice) -> Bool {
         let builtIn = (property(device, kIOHIDBuiltInKey) as? Bool) ?? false
         let transport = (property(device, kIOHIDTransportKey) as? String) ?? ""
@@ -169,7 +156,6 @@ final class MouseSeizer {
         let vendor = (property(device, kIOHIDVendorIDKey) as? Int) ?? 0
         let internalTransports: Set<String> = ["FIFO", "SPI", "Virtual"]
         let excludedNames = ["Karabiner", "Trackpad", "Virtual"]
-        // 0x16C0 is the vendor of the Karabiner virtual HID devices.
         return !builtIn && !internalTransports.contains(transport) && vendor != 0x16C0
             && !excludedNames.contains { product.localizedCaseInsensitiveContains($0) }
     }
