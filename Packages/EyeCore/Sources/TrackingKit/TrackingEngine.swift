@@ -41,10 +41,13 @@ public final class TrackingEngine: @unchecked Sendable {
         var observation: (@Sendable (FaceObservation?) -> Void)?
         var preview: (@Sendable (CGImage, FaceObservation?) -> Void)?
         var statistics = TrackingStatistics()
+        var frameCount = 0
+        var cameraName: String?
     }
 
     private let resources: TrackingResources
     private let queue = DispatchQueue(label: "com.deanbean.eyetracking.tracking", qos: .userInteractive)
+    private let sessionQueue = DispatchQueue(label: "com.deanbean.eyetracking.camera-session", qos: .userInitiated)
     private let shared = OSAllocatedUnfairLock(initialState: Handlers())
     private let log = Log("Tracking")
     private var camera: CameraCapture?
@@ -65,6 +68,14 @@ public final class TrackingEngine: @unchecked Sendable {
         shared.withLock { $0.statistics }
     }
 
+    public var frameCount: Int {
+        shared.withLock { $0.frameCount }
+    }
+
+    public var cameraName: String? {
+        shared.withLock { $0.cameraName }
+    }
+
     public func setObservationHandler(_ handler: (@Sendable (FaceObservation?) -> Void)?) {
         shared.withLock { $0.observation = handler }
     }
@@ -74,6 +85,25 @@ public final class TrackingEngine: @unchecked Sendable {
     }
 
     public func start(deviceID: String?) throws {
+        try sessionQueue.sync {
+            try startCamera(deviceID: deviceID)
+        }
+    }
+
+    public func restart(deviceID: String?) throws {
+        try sessionQueue.sync {
+            stopCamera()
+            try startCamera(deviceID: deviceID)
+        }
+    }
+
+    public func stop() {
+        sessionQueue.sync {
+            stopCamera()
+        }
+    }
+
+    private func startCamera(deviceID: String?) throws {
         try queue.sync {
             if landmarker == nil {
                 landmarker = try FaceLandmarker(
@@ -91,12 +121,21 @@ public final class TrackingEngine: @unchecked Sendable {
                 self?.process(buffer, time: time)
             }
         self.camera = camera
-        try camera.start(deviceID: deviceID)
+        shared.withLock {
+            $0.frameCount = 0
+            $0.cameraName = nil
+        }
+        let name = try camera.start(deviceID: deviceID)
+        shared.withLock { $0.cameraName = name }
     }
 
-    public func stop() {
+    private func stopCamera() {
         camera?.stop()
-        shared.withLock { $0.statistics = TrackingStatistics() }
+        shared.withLock {
+            $0.statistics = TrackingStatistics()
+            $0.frameCount = 0
+            $0.cameraName = nil
+        }
     }
 
     private func process(_ buffer: CVPixelBuffer, time: TimeInterval) {
@@ -123,7 +162,13 @@ public final class TrackingEngine: @unchecked Sendable {
         }
         let elapsed = Double(DispatchTime.now().uptimeNanoseconds - started) / 1_000_000
         updateStatistics(time: time, inference: elapsed, faceFound: observation != nil)
-        let handlers = shared.withLock { ($0.observation, $0.preview) }
+        let (handlers, firstFrame, cameraName) = shared.withLock { state in
+            state.frameCount += 1
+            return ((state.observation, state.preview), state.frameCount == 1, state.cameraName)
+        }
+        if firstFrame {
+            log.info("First frame from \(cameraName ?? "the camera"): \(width)x\(height).")
+        }
         handlers.0?(observation)
         if let preview = handlers.1, time - lastPreviewTime >= Self.previewInterval {
             lastPreviewTime = time

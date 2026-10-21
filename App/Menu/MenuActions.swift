@@ -56,6 +56,7 @@ final class MenuActions: NSObject {
             preview.toggle()
         case .selectCamera(let id):
             tracking.selectCamera(id)
+            preview.show()
         case .checkForUpdates:
             updater.checkManually()
         case .installUpdate:

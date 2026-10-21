@@ -19,19 +19,29 @@ final class PreviewWindowController: NSObject, NSWindowDelegate {
     func toggle() {
         if let window {
             window.close()
+        } else {
+            show()
+        }
+    }
+
+    func show() {
+        if let window {
+            NSApp.activate()
+            window.makeKeyAndOrderFront(nil)
             return
         }
         let view = PreviewView(frame: NSRect(x: 0, y: 0, width: 640, height: 400))
         let window = NSWindow(
             contentRect: view.frame, styleMask: [.titled, .closable, .resizable, .miniaturizable],
             backing: .buffered, defer: false)
-        window.title = String(localized: "preview.title")
+        window.title = Self.title(for: tracking.activeCameraName)
         window.contentView = view
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.center()
         self.window = window
         self.view = view
+        view.waitingFor = tracking.activeCameraName
         let engine = tracking.engine
         engine.setPreviewHandler { [weak view] image, observation in
             let statistics = engine.statistics
@@ -42,6 +52,19 @@ final class PreviewWindowController: NSObject, NSWindowDelegate {
         tracking.acquire(.preview)
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
+    }
+
+    func cameraSelected(_ name: String) {
+        window?.title = Self.title(for: name)
+        view?.reset(waitingFor: name)
+    }
+
+    func cameraStarted(_ name: String) {
+        window?.title = Self.title(for: name)
+    }
+
+    private static func title(for camera: String) -> String {
+        camera.isEmpty ? String(localized: "preview.title") : String(localized: "preview.title.camera \(camera)")
     }
 
     func windowWillClose(_ notification: Notification) {
@@ -62,8 +85,17 @@ final class PreviewView: NSView {
     private var observation: FaceObservation?
     private var statistics = TrackingStatistics()
 
+    var waitingFor = ""
+
     override var isFlipped: Bool {
         true
+    }
+
+    func reset(waitingFor camera: String) {
+        waitingFor = camera
+        image = nil
+        observation = nil
+        needsDisplay = true
     }
 
     func show(image: CGImage, observation: FaceObservation?, statistics: TrackingStatistics) {
@@ -77,7 +109,9 @@ final class PreviewView: NSView {
         NSColor.black.setFill()
         bounds.fill()
         guard let image, let context = NSGraphicsContext.current?.cgContext else {
-            drawStatus(String(localized: "preview.starting"))
+            drawStatus(
+                waitingFor.isEmpty
+                    ? String(localized: "preview.starting") : String(localized: "preview.waiting \(waitingFor)"))
             return
         }
         let frame = imageFrame(width: CGFloat(image.width), height: CGFloat(image.height))

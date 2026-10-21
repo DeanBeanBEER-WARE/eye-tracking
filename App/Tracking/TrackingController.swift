@@ -13,14 +13,20 @@ final class TrackingController {
         case gaze
     }
 
+    private static let firstFrameTimeout: Duration = .seconds(10)
+
     private let settings: SettingsStore
     private let log = Log("Tracking")
     private var consumers: Set<Consumer> = []
     private var observers: [Consumer: (FaceObservation?) -> Void] = [:]
-    private var startTask: Task<Void, Never>?
-    private var isRunning = false
+    private var gate = CameraStartGate()
+    private var watchdog: Task<Void, Never>?
 
     let engine: TrackingEngine
+
+    var onCameraChanged: (() -> Void)?
+
+    var onCameraStarted: ((String) -> Void)?
 
     init(settings: SettingsStore) {
         self.settings = settings
@@ -44,10 +50,12 @@ final class TrackingController {
         }
     }
 
-    var onCameraChanged: (() -> Void)?
-
     var activeCameraID: String {
         cameraChoices.first { $0.isSelected }?.id ?? ""
+    }
+
+    var activeCameraName: String {
+        cameraChoices.first { $0.isSelected }?.name ?? ""
     }
 
     var cameraChoices: [CameraChoice] {
@@ -59,7 +67,7 @@ final class TrackingController {
 
     func acquire(_ consumer: Consumer) {
         consumers.insert(consumer)
-        startIfNeeded()
+        perform(gate.demand())
     }
 
     func release(_ consumer: Consumer) {
@@ -67,13 +75,7 @@ final class TrackingController {
         guard consumers.isEmpty else {
             return
         }
-        startTask?.cancel()
-        startTask = nil
-        if isRunning {
-            isRunning = false
-            let engine = engine
-            Task.detached { engine.stop() }
-        }
+        perform(gate.release())
     }
 
     func selectCamera(_ id: String) {
@@ -82,47 +84,76 @@ final class TrackingController {
         } catch {
             log.error("Could not save the camera: \(error)")
         }
+        log.info("Camera selected: \(activeCameraName).")
         onCameraChanged?()
-        guard isRunning else {
-            return
-        }
-        isRunning = false
-        let engine = engine
-        Task.detached { engine.stop() }
-        startIfNeeded()
+        perform(gate.switchCamera())
     }
 
-    private func startIfNeeded() {
-        guard !consumers.isEmpty, !isRunning, startTask == nil else {
+    private func perform(_ action: CameraStartGate.Action) {
+        switch action {
+        case .none:
             return
+        case .start:
+            launch(restart: false)
+        case .restart:
+            launch(restart: true)
+        case .stop:
+            watchdog?.cancel()
+            let engine = engine
+            Task.detached { engine.stop() }
         }
+    }
+
+    private func launch(restart: Bool) {
+        watchdog?.cancel()
         let engine = engine
         let cameraID = settings.load().cameraID
-        startTask = Task {
-            defer { startTask = nil }
+        let deviceID = cameraID.isEmpty ? nil : cameraID
+        Task {
             guard await CameraCapture.requestAccess() else {
+                gate.startFailed()
                 log.warning("Camera access denied.")
                 Alerts.info(String(localized: "camera.denied.title"), String(localized: "camera.denied.message"))
                 return
             }
-            let result = await Task.detached { () -> String? in
+            let failure = await Task.detached { () -> String? in
                 do {
-                    try engine.start(deviceID: cameraID.isEmpty ? nil : cameraID)
+                    if restart {
+                        try engine.restart(deviceID: deviceID)
+                    } else {
+                        try engine.start(deviceID: deviceID)
+                    }
                     return nil
                 } catch {
                     return String(describing: error)
                 }
             }.value
-            if let result {
-                log.error("Tracking could not start: \(result)")
-                Alerts.info(String(localized: "tracking.failed.title"), result)
+            if let failure {
+                gate.startFailed()
+                log.error("Tracking could not start: \(failure)")
+                Alerts.info(String(localized: "tracking.failed.title"), failure)
                 return
             }
-            if consumers.isEmpty {
-                Task.detached { engine.stop() }
-            } else {
-                isRunning = true
+            let next = gate.startSucceeded(hasConsumers: !consumers.isEmpty)
+            if next == .none {
+                let name = engine.cameraName ?? activeCameraName
+                onCameraStarted?(name)
+                watchFirstFrame(name)
             }
+            perform(next)
+        }
+    }
+
+    private func watchFirstFrame(_ name: String) {
+        let engine = engine
+        watchdog = Task {
+            try? await Task.sleep(for: Self.firstFrameTimeout)
+            guard !Task.isCancelled, gate.isRunning, engine.frameCount == 0 else {
+                return
+            }
+            log.warning("\(name) delivered no frame within 10 seconds.")
+            Alerts.info(
+                String(localized: "camera.no_frames.title \(name)"), String(localized: "camera.no_frames.message"))
         }
     }
 

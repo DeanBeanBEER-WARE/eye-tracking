@@ -59,7 +59,8 @@ public final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBuffer
         }
     }
 
-    public func start(deviceID: String?) throws(CameraError) {
+    @discardableResult
+    public func start(deviceID: String?) throws(CameraError) -> String {
         guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
             throw .accessDenied
         }
@@ -73,7 +74,8 @@ public final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBuffer
         try configure(device)
         limitFrameRate(device)
         session.startRunning()
-        log.info("Camera started: \(device.localizedName).")
+        log.info("Camera started: \(device.localizedName) (\(device.deviceType.rawValue)).")
+        return device.localizedName
     }
 
     public func stop() {

@@ -59,6 +59,17 @@ Each disk image also contains `LICENSE.txt` and `THIRD_PARTY_NOTICES.md`.
 4. **Judge the result** with "Show Gaze Point": a red dot follows your gaze. The pointer does not move yet.
 5. **Switch on "Gaze Control"**. The first time, macOS asks for the Accessibility permission (see [Privacy and Permissions](#privacy-and-permissions)); gaze control starts as soon as it is granted.
 
+### Using an iPhone as Camera
+
+There is no pairing step in the app. With Continuity Camera, macOS itself offers a nearby iPhone as a regular camera, and it appears in the "Camera" menu as "<name of the iPhone> Camera". Requirements:
+
+- the iPhone is close to the Mac and signed in with the same Apple ID
+- Wi-Fi and Bluetooth are on on both devices
+- Continuity Camera is enabled on the iPhone (Settings > General > AirPlay & Continuity)
+- the iPhone is locked and mounted steadily, ideally in landscape, centered above your main screen
+
+The connection is made when the app opens the camera. Choosing a camera in the menu therefore opens the camera preview: its title names the active camera, and it shows "Waiting for …" until the first image arrives, which takes a few seconds for an iPhone. If no image arrives within 10 seconds, the app shows these requirements. Calibrate again after switching, because a calibration belongs to its camera.
+
 Calibrate again whenever you change the camera, its position or your display arrangement. The app notices display and camera changes and switches gaze control off until a matching calibration exists.
 
 ## Menu Reference
