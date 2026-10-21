@@ -68,7 +68,13 @@ There is no pairing step in the app. With Continuity Camera, macOS itself offers
 - Continuity Camera is enabled on the iPhone (Settings > General > AirPlay & Continuity)
 - the iPhone is locked and mounted steadily, ideally in landscape, centered above your main screen
 
+No app is needed on the iPhone, and the iPhone stays locked: locked and still is the normal state of a Continuity Camera. While the iPhone is unlocked, or its own camera app is open, macOS pauses the stream and sends a pause image instead of the camera picture; the preview then says "… is paused". Lock the iPhone again and the picture comes back by itself.
+
 The connection is made when the app opens the camera. Choosing a camera in the menu therefore opens the camera preview: its title names the active camera, and it shows "Waiting for …" until the first image arrives, which takes a few seconds for an iPhone. If no image arrives within 10 seconds, the app shows these requirements. Calibrate again after switching, because a calibration belongs to its camera.
+
+The app keeps the chosen camera even while it is gone. If the iPhone disconnects, moves out of range or stops sending pictures for six seconds, the app waits and starts it again as soon as macOS offers it again; it never switches to another camera on its own. The menu lists a missing camera as "(not connected)".
+
+The picture is turned upright automatically: the app follows the orientation macOS reports for the iPhone, and if it still finds no face for three seconds, it tries the other three quarter turns until a face appears. The working turn is remembered per camera.
 
 Calibrate again whenever you change the camera, its position or your display arrangement. The app notices display and camera changes and switches gaze control off until a matching calibration exists.
 

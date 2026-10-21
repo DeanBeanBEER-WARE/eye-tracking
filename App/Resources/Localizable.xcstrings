@@ -177,6 +177,17 @@
         }
       }
     },
+    "camera.not_connected %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (not connected)"
+          }
+        }
+      }
+    },
     "edit.copy" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -459,6 +470,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No face"
+          }
+        }
+      }
+    },
+    "preview.paused %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is paused. Lock the iPhone and leave it still to continue."
           }
         }
       }

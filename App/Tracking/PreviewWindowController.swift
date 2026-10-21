@@ -42,6 +42,7 @@ final class PreviewWindowController: NSObject, NSWindowDelegate {
         self.window = window
         self.view = view
         view.waitingFor = tracking.activeCameraName
+        apply(tracking.status)
         let engine = tracking.engine
         engine.setPreviewHandler { [weak view] image, observation in
             let statistics = engine.statistics
@@ -54,13 +55,18 @@ final class PreviewWindowController: NSObject, NSWindowDelegate {
         window.makeKeyAndOrderFront(nil)
     }
 
-    func cameraSelected(_ name: String) {
-        window?.title = Self.title(for: name)
-        view?.reset(waitingFor: name)
-    }
-
-    func cameraStarted(_ name: String) {
-        window?.title = Self.title(for: name)
+    func apply(_ status: CameraStatus) {
+        switch status {
+        case .waiting(let name):
+            window?.title = Self.title(for: name)
+            view?.reset(waitingFor: name)
+        case .paused(let name):
+            window?.title = Self.title(for: name)
+            view?.pausedCamera = name
+        case .running(let name):
+            window?.title = Self.title(for: name)
+            view?.pausedCamera = nil
+        }
     }
 
     private static func title(for camera: String) -> String {
@@ -87,12 +93,17 @@ final class PreviewView: NSView {
 
     var waitingFor = ""
 
+    var pausedCamera: String? {
+        didSet { needsDisplay = true }
+    }
+
     override var isFlipped: Bool {
         true
     }
 
     func reset(waitingFor camera: String) {
         waitingFor = camera
+        pausedCamera = nil
         image = nil
         observation = nil
         needsDisplay = true
@@ -109,9 +120,13 @@ final class PreviewView: NSView {
         NSColor.black.setFill()
         bounds.fill()
         guard let image, let context = NSGraphicsContext.current?.cgContext else {
-            drawStatus(
-                waitingFor.isEmpty
-                    ? String(localized: "preview.starting") : String(localized: "preview.waiting \(waitingFor)"))
+            if let pausedCamera {
+                drawStatus(String(localized: "preview.paused \(pausedCamera)"))
+            } else {
+                drawStatus(
+                    waitingFor.isEmpty
+                        ? String(localized: "preview.starting") : String(localized: "preview.waiting \(waitingFor)"))
+            }
             return
         }
         let frame = imageFrame(width: CGFloat(image.width), height: CGFloat(image.height))
@@ -125,6 +140,9 @@ final class PreviewView: NSView {
             drawLandmarks(observation, in: frame)
         }
         drawStatus(statusText())
+        if let pausedCamera {
+            drawStatus(String(localized: "preview.paused \(pausedCamera)"), at: NSPoint(x: 8, y: 28))
+        }
     }
 
     private func imageFrame(width: CGFloat, height: CGFloat) -> CGRect {
@@ -184,12 +202,12 @@ final class PreviewView: NSView {
         return parts.joined(separator: "  ·  ")
     }
 
-    private func drawStatus(_ text: String) {
+    private func drawStatus(_ text: String, at origin: NSPoint = NSPoint(x: 8, y: 8)) {
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium),
             .foregroundColor: NSColor.white,
             .backgroundColor: NSColor.black.withAlphaComponent(0.6),
         ]
-        NSAttributedString(string: " \(text) ", attributes: attributes).draw(at: NSPoint(x: 8, y: 8))
+        NSAttributedString(string: " \(text) ", attributes: attributes).draw(at: origin)
     }
 }

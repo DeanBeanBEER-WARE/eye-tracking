@@ -43,6 +43,8 @@ public final class TrackingEngine: @unchecked Sendable {
         var statistics = TrackingStatistics()
         var frameCount = 0
         var cameraName: String?
+        var cameraEvent: (@Sendable (CameraEvent) -> Void)?
+        var rotationLocked: (@Sendable (Int) -> Void)?
     }
 
     private let resources: TrackingResources
@@ -59,6 +61,7 @@ public final class TrackingEngine: @unchecked Sendable {
     private var framesPerSecond: Double = 0
     private var inferenceMilliseconds: Double = 0
     private var loggedDetectionError = false
+    private var orientation = OrientationSearch()
 
     public init(resources: TrackingResources) {
         self.resources = resources
@@ -84,16 +87,24 @@ public final class TrackingEngine: @unchecked Sendable {
         shared.withLock { $0.preview = handler }
     }
 
-    public func start(deviceID: String?) throws {
+    public func setCameraEventHandler(_ handler: (@Sendable (CameraEvent) -> Void)?) {
+        shared.withLock { $0.cameraEvent = handler }
+    }
+
+    public func setRotationLockedHandler(_ handler: (@Sendable (Int) -> Void)?) {
+        shared.withLock { $0.rotationLocked = handler }
+    }
+
+    public func start(deviceID: String?, rotationOffset: Int = 0) throws {
         try sessionQueue.sync {
-            try startCamera(deviceID: deviceID)
+            try startCamera(deviceID: deviceID, rotationOffset: rotationOffset)
         }
     }
 
-    public func restart(deviceID: String?) throws {
+    public func restart(deviceID: String?, rotationOffset: Int = 0) throws {
         try sessionQueue.sync {
             stopCamera()
-            try startCamera(deviceID: deviceID)
+            try startCamera(deviceID: deviceID, rotationOffset: rotationOffset)
         }
     }
 
@@ -103,7 +114,7 @@ public final class TrackingEngine: @unchecked Sendable {
         }
     }
 
-    private func startCamera(deviceID: String?) throws {
+    private func startCamera(deviceID: String?, rotationOffset: Int) throws {
         try queue.sync {
             if landmarker == nil {
                 landmarker = try FaceLandmarker(
@@ -114,18 +125,23 @@ public final class TrackingEngine: @unchecked Sendable {
                 log.info("MediaPipe face landmarker loaded.")
             }
             lastFrameTime = nil
+            orientation = OrientationSearch(offset: rotationOffset)
         }
         let camera =
             self.camera
             ?? CameraCapture(queue: queue) { [weak self] buffer, time in
                 self?.process(buffer, time: time)
             }
+        camera.eventHandler = { [weak self] event in
+            let handler = self?.shared.withLock { $0.cameraEvent }
+            handler?(event)
+        }
         self.camera = camera
         shared.withLock {
             $0.frameCount = 0
             $0.cameraName = nil
         }
-        let name = try camera.start(deviceID: deviceID)
+        let name = try camera.start(deviceID: deviceID, rotationOffset: orientation.offset)
         shared.withLock { $0.cameraName = name }
     }
 
@@ -161,6 +177,7 @@ public final class TrackingEngine: @unchecked Sendable {
             }
         }
         let elapsed = Double(DispatchTime.now().uptimeNanoseconds - started) / 1_000_000
+        updateOrientation(faceFound: observation != nil, time: time)
         updateStatistics(time: time, inference: elapsed, faceFound: observation != nil)
         let (handlers, firstFrame, cameraName) = shared.withLock { state in
             state.frameCount += 1
@@ -177,6 +194,19 @@ public final class TrackingEngine: @unchecked Sendable {
             if let image {
                 preview(image, observation)
             }
+        }
+    }
+
+    private func updateOrientation(faceFound: Bool, time: TimeInterval) {
+        let wasLocked = orientation.isLocked
+        if let offset = orientation.update(faceFound: faceFound, now: time) {
+            log.info("No face found; trying a rotation offset of \(offset) degrees.")
+            camera?.setRotationOffset(offset)
+        }
+        if orientation.isLocked, !wasLocked {
+            log.info("Face found with a rotation offset of \(orientation.offset) degrees.")
+            let handler = shared.withLock { $0.rotationLocked }
+            handler?(orientation.offset)
         }
     }
 

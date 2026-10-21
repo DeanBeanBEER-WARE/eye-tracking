@@ -10,13 +10,20 @@ public struct Settings: Codable, Equatable, Sendable {
 
     public var snapping: Bool
 
+    public var cameraName: String
+
+    public var cameraRotations: [String: Int]
+
     public init(
-        notifiedUpdate: String = "", cameraID: String = "", gazeControl: Bool = false, snapping: Bool = true
+        notifiedUpdate: String = "", cameraID: String = "", gazeControl: Bool = false, snapping: Bool = true,
+        cameraName: String = "", cameraRotations: [String: Int] = [:]
     ) {
         self.notifiedUpdate = notifiedUpdate
         self.cameraID = cameraID
         self.gazeControl = gazeControl
         self.snapping = snapping
+        self.cameraName = cameraName
+        self.cameraRotations = cameraRotations
     }
 
     public init(from decoder: any Decoder) throws {
@@ -25,6 +32,8 @@ public struct Settings: Codable, Equatable, Sendable {
         cameraID = try container.decodeIfPresent(String.self, forKey: .cameraID) ?? ""
         gazeControl = try container.decodeIfPresent(Bool.self, forKey: .gazeControl) ?? false
         snapping = try container.decodeIfPresent(Bool.self, forKey: .snapping) ?? true
+        cameraName = try container.decodeIfPresent(String.self, forKey: .cameraName) ?? ""
+        cameraRotations = try container.decodeIfPresent([String: Int].self, forKey: .cameraRotations) ?? [:]
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -32,6 +41,8 @@ public struct Settings: Codable, Equatable, Sendable {
         case cameraID = "camera_id"
         case gazeControl = "gaze_control"
         case snapping
+        case cameraName = "camera_name"
+        case cameraRotations = "camera_rotations"
     }
 }
 

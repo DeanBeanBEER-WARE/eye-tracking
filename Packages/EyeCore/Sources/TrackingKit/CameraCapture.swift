@@ -18,25 +18,51 @@ public enum CameraError: Error, Equatable, Sendable, CustomStringConvertible {
 
     case noDevice
 
+    case deviceUnavailable
+
     case configurationFailed(String)
 
     public var description: String {
         switch self {
         case .accessDenied: "camera access denied"
         case .noDevice: "no camera available"
+        case .deviceUnavailable: "the selected camera is not connected"
         case .configurationFailed(let message): "camera configuration failed: \(message)"
         }
     }
 }
 
+public enum CameraEvent: Equatable, Sendable {
+    case interrupted(String)
+
+    case interruptionEnded
+
+    case runtimeError(String)
+
+    case disconnected
+
+    case suspended(Bool)
+}
+
 public final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unchecked Sendable {
     public static let frameRate: Int32 = 30
+
+    public static let preferredSize = (width: 1280, height: 720)
 
     private let session = AVCaptureSession()
     private let output = AVCaptureVideoDataOutput()
     private let queue: DispatchQueue
+    private let controlQueue = DispatchQueue(label: "com.deanbean.eyetracking.camera-control")
     private let handler: @Sendable (CVPixelBuffer, TimeInterval) -> Void
     private let log = Log("Camera")
+    private var device: AVCaptureDevice?
+    private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
+    private var observations: [NSKeyValueObservation] = []
+    private var notificationTokens: [NSObjectProtocol] = []
+    private var rotationOffset = 0
+    private var appliedRotation: CGFloat?
+
+    public var eventHandler: (@Sendable (CameraEvent) -> Void)?
 
     public init(queue: DispatchQueue, handler: @escaping @Sendable (CVPixelBuffer, TimeInterval) -> Void) {
         self.queue = queue
@@ -60,30 +86,54 @@ public final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBuffer
     }
 
     @discardableResult
-    public func start(deviceID: String?) throws(CameraError) -> String {
+    public func start(deviceID: String?, rotationOffset: Int = 0) throws(CameraError) -> String {
         guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
             throw .accessDenied
         }
         let devices = Self.discovery().devices
-        let device =
-            devices.first { $0.uniqueID == deviceID }
-            ?? devices.first { $0.deviceType == .builtInWideAngleCamera } ?? devices.first
-        guard let device else {
+        let found: AVCaptureDevice?
+        if let deviceID {
+            found = devices.first { $0.uniqueID == deviceID }
+            guard found != nil else {
+                throw .deviceUnavailable
+            }
+        } else {
+            found = devices.first { $0.deviceType == .builtInWideAngleCamera } ?? devices.first
+        }
+        guard let device = found else {
             throw .noDevice
         }
         try configure(device)
-        limitFrameRate(device)
+        selectFormat(device)
+        self.device = device
+        controlQueue.sync {
+            self.rotationOffset = rotationOffset
+            self.appliedRotation = nil
+        }
+        observe(device)
         session.startRunning()
-        log.info("Camera started: \(device.localizedName) (\(device.deviceType.rawValue)).")
+        let size = CMVideoFormatDescriptionGetDimensions(device.activeFormat.formatDescription)
+        log.info(
+            "Camera started: \(device.localizedName) (\(device.deviceType.rawValue), \(size.width)x\(size.height), "
+                + "suspended \(device.isSuspended)).")
         return device.localizedName
     }
 
     public func stop() {
+        removeObservers()
+        device = nil
         guard session.isRunning else {
             return
         }
         session.stopRunning()
         log.info("Camera stopped.")
+    }
+
+    public func setRotationOffset(_ offset: Int) {
+        controlQueue.async {
+            self.rotationOffset = offset
+            self.applyRotation()
+        }
     }
 
     public func captureOutput(
@@ -114,9 +164,6 @@ public final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBuffer
             throw .configurationFailed("input not accepted")
         }
         session.addInput(input)
-        if session.canSetSessionPreset(.hd1280x720) {
-            session.sessionPreset = .hd1280x720
-        }
         guard !session.outputs.contains(output) else {
             return
         }
@@ -129,22 +176,111 @@ public final class CameraCapture: NSObject, AVCaptureVideoDataOutputSampleBuffer
         session.addOutput(output)
     }
 
-    private func limitFrameRate(_ device: AVCaptureDevice) {
-        let duration = CMTime(value: 1, timescale: Self.frameRate)
-        let supported = device.activeFormat.videoSupportedFrameRateRanges.contains {
-            $0.maxFrameRate >= Double(Self.frameRate) && $0.minFrameRate <= Double(Self.frameRate)
+    private func selectFormat(_ device: AVCaptureDevice) {
+        let rate = Double(Self.frameRate)
+        let candidates = device.formats.filter { format in
+            format.videoSupportedFrameRateRanges.contains { $0.maxFrameRate >= rate && $0.minFrameRate <= rate }
         }
-        guard supported else {
-            return
+        let best = candidates.min { lhs, rhs in
+            Self.distance(lhs) < Self.distance(rhs)
         }
         do {
             try device.lockForConfiguration()
-            device.activeVideoMinFrameDuration = duration
-            device.activeVideoMaxFrameDuration = duration
-            device.unlockForConfiguration()
+            defer { device.unlockForConfiguration() }
+            if let best {
+                device.activeFormat = best
+                let duration = CMTime(value: 1, timescale: Self.frameRate)
+                device.activeVideoMinFrameDuration = duration
+                device.activeVideoMaxFrameDuration = duration
+            }
         } catch {
-            log.warning("Could not set the frame rate: \(error)")
+            log.warning("Could not configure \(device.localizedName): \(error)")
         }
+    }
+
+    private static func distance(_ format: AVCaptureDevice.Format) -> Int {
+        let size = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
+        let landscapeWidth = Int(max(size.width, size.height))
+        let landscapeHeight = Int(min(size.width, size.height))
+        return abs(landscapeWidth - preferredSize.width) + abs(landscapeHeight - preferredSize.height)
+    }
+
+    private func observe(_ device: AVCaptureDevice) {
+        removeObservers()
+        let coordinator = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: nil)
+        rotationCoordinator = coordinator
+        observations.append(
+            coordinator.observe(\.videoRotationAngleForHorizonLevelCapture, options: [.initial]) { [weak self] _, _ in
+                guard let capture = self else {
+                    return
+                }
+                capture.controlQueue.async {
+                    capture.applyRotation()
+                }
+            })
+        observations.append(
+            device.observe(\.isSuspended, options: [.new]) { [weak self] device, _ in
+                let suspended = device.isSuspended
+                self?.log.info("\(device.localizedName) suspended: \(suspended).")
+                self?.eventHandler?(.suspended(suspended))
+            })
+        let center = NotificationCenter.default
+        notificationTokens.append(
+            center.addObserver(forName: AVCaptureSession.wasInterruptedNotification, object: session, queue: nil) {
+                [weak self] notification in
+                let reason = notification.userInfo.map { "\($0)" } ?? "unknown reason"
+                self?.log.warning("Camera session interrupted: \(reason).")
+                self?.eventHandler?(.interrupted(reason))
+            })
+        notificationTokens.append(
+            center.addObserver(forName: AVCaptureSession.interruptionEndedNotification, object: session, queue: nil) {
+                [weak self] _ in
+                self?.log.info("Camera session interruption ended.")
+                self?.eventHandler?(.interruptionEnded)
+            })
+        notificationTokens.append(
+            center.addObserver(forName: AVCaptureSession.runtimeErrorNotification, object: session, queue: nil) {
+                [weak self] notification in
+                let error = notification.userInfo?[AVCaptureSessionErrorKey].map { "\($0)" } ?? "unknown error"
+                self?.log.error("Camera session error: \(error).")
+                self?.eventHandler?(.runtimeError(error))
+            })
+        notificationTokens.append(
+            center.addObserver(forName: AVCaptureDevice.wasDisconnectedNotification, object: device, queue: nil) {
+                [weak self] _ in
+                self?.log.warning("Camera disconnected.")
+                self?.eventHandler?(.disconnected)
+            })
+    }
+
+    private func removeObservers() {
+        for observation in observations {
+            observation.invalidate()
+        }
+        observations.removeAll()
+        for token in notificationTokens {
+            NotificationCenter.default.removeObserver(token)
+        }
+        notificationTokens.removeAll()
+        rotationCoordinator = nil
+    }
+
+    private func applyRotation() {
+        guard let connection = output.connection(with: .video) else {
+            return
+        }
+        let horizon = rotationCoordinator?.videoRotationAngleForHorizonLevelCapture ?? 0
+        let angle = (horizon + CGFloat(rotationOffset)).truncatingRemainder(dividingBy: 360)
+        guard angle != appliedRotation else {
+            return
+        }
+        guard connection.isVideoRotationAngleSupported(angle) else {
+            log.warning("Rotation \(Int(angle)) degrees is not supported by this camera.")
+            return
+        }
+        connection.videoRotationAngle = angle
+        appliedRotation = angle
+        log.info("Video rotation \(Int(angle)) degrees (horizon \(Int(horizon)), offset \(rotationOffset)).")
     }
 
     private static func discovery() -> AVCaptureDevice.DiscoverySession {

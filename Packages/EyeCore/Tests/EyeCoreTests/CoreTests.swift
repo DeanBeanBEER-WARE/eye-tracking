@@ -86,8 +86,12 @@ struct CoreTests {
         let file = root.appendingPathComponent("sub/settings.json")
         let store = SettingsStore(fileURL: file, log: Log("Test", sink: CaptureSink()))
         #expect(store.load() == Settings())
-        try store.update { $0.notifiedUpdate = "0.1.1" }
+        try store.update {
+            $0.notifiedUpdate = "0.1.1"
+            $0.cameraRotations = ["phone": 90]
+        }
         #expect(SettingsStore(fileURL: file).load().notifiedUpdate == "0.1.1")
+        #expect(SettingsStore(fileURL: file).load().cameraRotations == ["phone": 90])
         let text = String(decoding: try Data(contentsOf: file), as: UTF8.self)
         #expect(text.contains(#""notified_update" : "0.1.1""#))
 

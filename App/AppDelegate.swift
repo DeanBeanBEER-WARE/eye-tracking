@@ -41,11 +41,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             pointer?.setSuspended(true)
         }
         calibration.onFinish = { [weak pointer] in pointer?.setSuspended(false) }
-        tracking.onCameraChanged = { [weak gaze, weak preview, weak tracking] in
-            gaze?.cameraChanged()
-            preview?.cameraSelected(tracking?.activeCameraName ?? "")
-        }
-        tracking.onCameraStarted = { [weak preview] name in preview?.cameraStarted(name) }
+        tracking.onCameraChanged = { [weak gaze] in gaze?.cameraChanged() }
+        tracking.onStatusChanged = { [weak preview] status in preview?.apply(status) }
         let menuActions = MenuActions(
             updater: updater, tracking: tracking, preview: preview, gaze: gaze, calibration: calibration,
             gazeDot: gazeDot, pointer: pointer)
